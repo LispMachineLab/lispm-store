@@ -72,20 +72,57 @@
   "The items of KIND."
   (seq-filter (lambda (item) (eq (plist-get (cdr item) :kind) kind)) (lispm-store-test--items)))
 
+(defun lispm-store-test--emacs (form)
+  "What FORM evaluates to in a new Emacs that has this run's packages.
+An error there is one here, with what that Emacs said."
+  (let ((log (make-temp-file "lispm-store-emacs")))
+    (with-temp-buffer
+      (let ((status (call-process
+                     (expand-file-name invocation-name invocation-directory) nil (list t log) nil
+                     "-Q" "--batch" "--eval"
+                     (format "%S" `(progn (require 'package)
+                                          (require 'package-vc)
+                                          (setq package-user-dir ,package-user-dir
+                                                package-archives ',package-archives)
+                                          (package-initialize)
+                                          (princ (format "\nlispm-store-value: %S\n" ,form)))))))
+        (unless (and (eq status 0) (re-search-backward "^lispm-store-value: \\(.*\\)$" nil t))
+          (error "A new Emacs failed (%s) evaluating %S:\n%s" status form
+                 (with-temp-buffer (insert-file-contents log) (buffer-string))))
+        (car (read-from-string (match-string 1)))))))
+
 (defvar lispm-store-test--installed nil
   "Non-nil once the apps' packages are installed.")
 
 (defun lispm-store-test--install ()
-  "Install every app's package, as LispM Desktop does, once."
+  "Install every app's package as LispM Desktop does, once.
+Each in an Emacs of its own, as installing loads what it compiles.
+A package from git may require a newer version of a package Emacs
+has built in, such as Compat: Emacs 30.1's package-vc leaves that
+unmet, as it compares no versions (fixed in 30.2).  Then the newer
+one is installed from the archives, and the package compiled again
+in a new Emacs, which loads it rather than the built-in one."
   (unless lispm-store-test--installed
     (pcase-dolist (`(,_id . ,item) (lispm-store-test--of-kind 'app))
       (pcase (plist-get item :package)
         ('nil)
-        ((and (pred symbolp) name) (package-install name))
+        ((and (pred symbolp) name)
+         (lispm-store-test--emacs `(progn (package-install ',name) t)))
         (`(,name . ,spec)
-         (package-vc-install (cons name (cl-loop for (key value) on spec by #'cddr
-                                                 unless (eq key :rev) append (list key value)))
-                             (plist-get spec :rev)))))
+         (when (lispm-store-test--emacs
+                `(progn
+                   (package-vc-install ',(cons name (cl-loop for (key value) on spec by #'cddr
+                                                             unless (eq key :rev) append (list key value)))
+                                       ,(plist-get spec :rev))
+                   (let ((unmet (seq-remove (lambda (requirement)
+                                              (package-installed-p (car requirement) (cadr requirement)))
+                                            (package-desc-reqs (cadr (assq ',name package-alist))))))
+                     (dolist (requirement unmet)
+                       (package-install (cadr (assq (car requirement) package-archive-contents))))
+                     (and unmet t))))
+           (lispm-store-test--emacs `(progn (package-vc-rebuild (cadr (assq ',name package-alist))) t))))))
+    ;; Activate here what was installed there.
+    (package-initialize)
     (setq lispm-store-test--installed t)))
 
 (defun lispm-store-test--load-skill (file)
@@ -124,16 +161,6 @@
 
 ;;;; Apps and roles
 
-(defun lispm-store-test--fresh (form)
-  "What FORM evaluates to in a new Emacs that has the installed packages."
-  (with-temp-buffer
-    (call-process (expand-file-name invocation-name invocation-directory) nil (list t nil) nil
-                  "-Q" "--batch" "--eval"
-                  (format "%S" `(progn (setq package-user-dir ,package-user-dir)
-                                       (package-initialize)
-                                       (prin1 ,form))))
-    (car (read-from-string (buffer-string)))))
-
 (ert-deftest lispm-store-test-apps-open ()
   "Each app's command is a command once its package is installed.
 In a new Emacs, as after a restart: installing compiles a package,
@@ -142,7 +169,7 @@ which loads more of it than its autoloads."
   (pcase-dolist (`(,id . ,item) (lispm-store-test--of-kind 'app))
     (let ((command (plist-get item :command))
           (feature (plist-get item :feature)))
-      (should (equal (list id (lispm-store-test--fresh
+      (should (equal (list id (lispm-store-test--emacs
                                (if command
                                    `(commandp ',command)
                                  `(featurep (require ',feature nil t)))))
