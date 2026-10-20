@@ -14,12 +14,13 @@ load it.  Everything listed here is reviewed before it is merged (see [[*Review]
 
 * The LispM projects
 
-LispM is made of these repositories under [[https://github.com/LispMachineLab][LispMachineLab]]:
+LispM is four projects, each a repository of its own under
+[[https://github.com/LispMachineLab][LispMachineLab]]:
 
 | [[https://github.com/LispMachineLab/lispm-agent][lispm-agent]]     | LispM Agent: AI agents that run inside Emacs, their conversations org documents, their tools Elisp |
 | [[https://github.com/LispMachineLab/lispm-desktop][lispm-desktop]]   | LispM Desktop: Emacs laid out as Mac OS 9's desktop, a workspace for agents, ready from the first start |
 | [[https://github.com/LispMachineLab/lispm-browser][lispm-browser]]   | LispM Browser: a WebKit browser in Emacs, with tabs, keyboard hints and Chrome extensions |
-| *lispm-store*     | LispM Store, this repository: the apps, agent roles and skills LispM Desktop offers to install |
+| *lispm-store*     | LispM Store, this repository: the catalog of applications, agents and skills LispM Desktop's App Store installs |
 
 * The catalog
 
