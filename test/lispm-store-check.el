@@ -38,10 +38,19 @@
   "The store's checkout.")
 
 (defconst lispm-store-check-keys
-  '((app :required (:kind :name :description :icon) :optional (:package :command :feature :requires))
+  '((app :required (:kind :name :subtitle :category :description :icon)
+         :optional (:package :command :feature :requires))
+    (extension :required (:kind :name :subtitle :description :icon :package :feature)
+               :optional (:program :install :requires))
     (role :required (:kind :name :description :file) :optional (:requires))
     (skill :required (:kind :name :description :file) :optional (:requires)))
   "The properties of an item of each kind.")
+
+(defconst lispm-store-check-categories '(news music productivity utilities games)
+  "The categories an app may name; the App Store puts extensions in their own.")
+
+(defconst lispm-store-check-subtitle-length 24
+  "Most characters a subtitle may have: it stands under an icon in the grid.")
 
 (defconst lispm-store-check-forbidden '(:make :shell-command)
   "Properties no part of the catalog may hold: they would run commands.")
@@ -185,9 +194,42 @@
            (lispm-store-check--problem "%s: %s is not a command of Emacs" id command))
           ((and (null package) feature (not (locate-library (symbol-name feature))))
            (lispm-store-check--problem "%s: %s is not a library of Emacs" id feature)))
-    (if (not (and (stringp icon) (string-match-p "\\`[a-z0-9][a-z0-9-]*\\'" icon)))
-        (progn (lispm-store-check--problem "%s: :icon must name icons/NAME.svg, as a string" id) nil)
-      (list (lispm-store-check--svg icon 16) (lispm-store-check--svg icon 32)))))
+    (unless (memq (plist-get item :category) lispm-store-check-categories)
+      (lispm-store-check--problem "%s: :category is one of %s" id
+                                  (mapconcat #'symbol-name lispm-store-check-categories ", ")))
+    (lispm-store-check--icons id icon)))
+
+(defun lispm-store-check--subtitle (id subtitle)
+  "Check the SUBTITLE of the item ID: a few words on one line."
+  (unless (and (lispm-store-check--line-p subtitle)
+               (<= (length subtitle) lispm-store-check-subtitle-length))
+    (lispm-store-check--problem "%s: :subtitle is a string of one line, at most %d characters"
+                                id lispm-store-check-subtitle-length)))
+
+(defun lispm-store-check--icons (id icon)
+  "Check the :icon ICON of the item ID; return the files it names."
+  (if (not (and (stringp icon) (string-match-p "\\`[a-z0-9][a-z0-9-]*\\'" icon)))
+      (progn (lispm-store-check--problem "%s: :icon must name icons/NAME.svg, as a string" id) nil)
+    (list (lispm-store-check--svg icon 16) (lispm-store-check--svg icon 32))))
+
+;;;; Extensions
+
+(defun lispm-store-check--extension (id item)
+  "Check the extension ID, whose properties are ITEM; return the files it uses."
+  (let ((package (plist-get item :package)))
+    (if (not (consp package))
+        (lispm-store-check--problem "%s: an extension's :package is (NAME :url URL :rev SHA)" id)
+      (lispm-store-check--package id package))
+    (unless (and (lispm-store-check--command-p (plist-get item :feature))
+                 (not (keywordp (plist-get item :feature))))
+      (lispm-store-check--problem "%s: :feature is a symbol, the library the package provides" id))
+    (dolist (key '(:program :install))
+      (when (plist-member item key)
+        (unless (lispm-store-check--line-p (plist-get item key))
+          (lispm-store-check--problem "%s: %s is a string of one line" id key))))
+    (when (and (plist-member item :install) (not (plist-member item :program)))
+      (lispm-store-check--problem "%s: :install says how to install its :program, which it lacks" id))
+    (lispm-store-check--icons id (plist-get item :icon))))
 
 (defun lispm-store-check--command-p (object)
   "Non-nil if OBJECT can name a command or a feature."
@@ -369,7 +411,7 @@ Returns (KEYWORDS . BODY)."
                      (let* ((kind (plist-get item :kind))
                             (keys (cdr (assq kind lispm-store-check-keys))))
                        (if (null keys)
-                           (lispm-store-check--problem "%s: :kind is app, role or skill" id)
+                           (lispm-store-check--problem "%s: :kind is app, extension, role or skill" id)
                          (dolist (key (plist-get keys :required))
                            (unless (plist-member item key)
                              (lispm-store-check--problem "%s: needs %s" id key)))
@@ -379,8 +421,11 @@ Returns (KEYWORDS . BODY)."
                          (dolist (key '(:name :description))
                            (unless (lispm-store-check--line-p (plist-get item key))
                              (lispm-store-check--problem "%s: %s is a string of one line" id key)))
+                         (when (plist-member item :subtitle)
+                           (lispm-store-check--subtitle id (plist-get item :subtitle)))
                          (setq used (append (pcase kind
                                               ('app (lispm-store-check--app id item))
+                                              ('extension (lispm-store-check--extension id item))
                                               ('role (lispm-store-check--role id item))
                                               ('skill (lispm-store-check--skill id item)))
                                             used))))))))
@@ -402,9 +447,9 @@ Returns (KEYWORDS . BODY)."
       (message "catalog.eld: %d items (%s), all well formed."
                (length items)
                (mapconcat (lambda (kind)
-                            (format "%d %ss" (cl-count kind items :key (lambda (item) (plist-get (cdr item) :kind)))
-                                    kind))
-                          '(app role skill) ", ")))
+                            (let ((count (cl-count kind items :key (lambda (item) (plist-get (cdr item) :kind)))))
+                              (format "%d %s%s" count kind (if (= count 1) "" "s"))))
+                          '(app extension role skill) ", ")))
     (kill-emacs (if problems 1 0))))
 
 (provide 'lispm-store-check)

@@ -95,7 +95,7 @@ An error there is one here, with what that Emacs said."
   "Non-nil once the apps' packages are installed.")
 
 (defun lispm-store-test--install ()
-  "Install every app's package as LispM Desktop does, once.
+  "Install every app's and extension's package as LispM Desktop does, once.
 Each in an Emacs of its own, as installing loads what it compiles.
 A package from git may require a newer version of a package Emacs
 has built in, such as Compat: Emacs 30.1's package-vc leaves that
@@ -103,7 +103,8 @@ unmet, as it compares no versions (fixed in 30.2).  Then the newer
 one is installed from the archives, and the package compiled again
 in a new Emacs, which loads it rather than the built-in one."
   (unless lispm-store-test--installed
-    (pcase-dolist (`(,_id . ,item) (lispm-store-test--of-kind 'app))
+    (pcase-dolist (`(,_id . ,item) (append (lispm-store-test--of-kind 'app)
+                                           (lispm-store-test--of-kind 'extension)))
       (pcase (plist-get item :package)
         ('nil)
         ((and (pred symbolp) name)
@@ -159,7 +160,7 @@ in a new Emacs, which loads it rather than the built-in one."
     (should-not (nth 1 result))
     (car result)))
 
-;;;; Apps and roles
+;;;; Apps, extensions and roles
 
 (ert-deftest lispm-store-test-apps-open ()
   "Each app's command is a command once its package is installed.
@@ -174,6 +175,20 @@ which loads more of it than its autoloads."
                                    `(commandp ',command)
                                  `(featurep (require ',feature nil t)))))
                      (list id t))))))
+
+(ert-deftest lispm-store-test-extensions-load ()
+  "Each extension's package, once installed, loads beside LispM Desktop and
+provides its feature.  In a new Emacs, with LispM Desktop's lisp/ on its
+load path, as it is in LispM Desktop."
+  (lispm-store-test--install)
+  (let ((desktop (file-name-directory (or (locate-library "lispm-desktop-ai")
+                                          (error "LispM Desktop's lisp/ is not on the load path")))))
+    (pcase-dolist (`(,id . ,item) (lispm-store-test--of-kind 'extension))
+      (let ((feature (plist-get item :feature)))
+        (should (equal (list id (lispm-store-test--emacs
+                                 `(progn (add-to-list 'load-path ,desktop)
+                                         (featurep (require ',feature)))))
+                       (list id t)))))))
 
 (ert-deftest lispm-store-test-role-tools ()
   "Every tool a role names is a tool of LispM or of a skill."

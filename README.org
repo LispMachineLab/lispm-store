@@ -2,15 +2,16 @@
 
 #+HTML: <p align="center"><a href="https://github.com/LispMachineLab/lispm-store/actions/workflows/check.yml"><img src="https://github.com/LispMachineLab/lispm-store/actions/workflows/check.yml/badge.svg" alt="check" /></a></p>
 
-The catalog of LispM Desktop's App Store: the applications, agent roles and skills it offers to
-install, kept as plain data, with the icons, roles and skills it lists.  The App Store is
-modelled on Mac OS 9's Extensions Manager.
+The catalog of LispM Desktop's App Store: the applications and extensions it offers to install,
+kept as plain data with their icons; and the roles and skills of LispM Agent's agents.  The App
+Store is laid out as the Mac App Store, in Mac OS 9's forms: categories down the left, the
+items as icons in a grid.
 
 LispM Desktop clones this repository and reads [[file:catalog.eld][catalog.eld]].  It reads it as data and never
 evaluates it: nothing in the catalog runs.  What runs is what you choose to install: an
-application's Emacs package, from the package archives or from a git commit the catalog pins; a
-role, which is instructions for LispM's agents; or a skill, whose code agents evaluate when they
-load it.  Everything listed here is reviewed before it is merged (see [[*Review][Review]]).
+application's or an extension's Emacs package, from the package archives or from a git commit
+the catalog pins.  A role is instructions for LispM's agents, and a skill code agents evaluate
+when they load it; the App Store does not list them, and they are kept here for LispM Agent.  Everything listed here is reviewed before it is merged (see [[*Review][Review]]).
 
 * The LispM projects
 
@@ -20,7 +21,7 @@ LispM is four projects, each a repository of its own under
 | [[https://github.com/LispMachineLab/lispm-agent][lispm-agent]]     | LispM Agent: AI agents that run inside Emacs, their conversations org documents, their tools Elisp |
 | [[https://github.com/LispMachineLab/lispm-desktop][lispm-desktop]]   | LispM Desktop: Emacs laid out as Mac OS 9's desktop, a workspace for agents, ready from the first start |
 | [[https://github.com/LispMachineLab/lispm-browser][lispm-browser]]   | LispM Browser: a WebKit browser in Emacs, with tabs, keyboard hints and Chrome extensions |
-| *lispm-store*     | LispM Store, this repository: the catalog of applications, agents and skills LispM Desktop's App Store installs |
+| *lispm-store*     | LispM Store, this repository: the catalog of applications and extensions LispM Desktop's App Store installs |
 
 * The catalog
 
@@ -36,19 +37,22 @@ catalog.eld holds one form, a property list:
 Each item is a list: its ID, a lower-case symbol unique in the catalog, then its properties.
 Every item has these:
 
-| ~:kind~        | ~app~, ~role~ or ~skill~                                                          |
+| ~:kind~        | ~app~, ~extension~, ~role~ or ~skill~                                             |
 | ~:name~        | the name the store shows, a string                                                |
 | ~:description~ | what it is, one line                                                              |
 | ~:requires~    | optional: a list of IDs of items to install first, such as the app a skill drives |
 
 ** Applications
 
-An app is something LispM Desktop opens in a window of its own.
+An app is something LispM Desktop opens in a window of its own: it has an icon to open it, and
+its own menus in the menu bar while it is in front.
 
-| ~:icon~    | a string NAME: the icon is [[file:icons/][icons/]]NAME.svg (16 pixels) and icons/NAME-32.svg (32 pixels) |
-| ~:package~ | how to install it, as below; absent for a part of Emacs                                 |
-| ~:command~ | the command that opens it, a symbol                                                     |
-| ~:feature~ | instead of ~:command~: a library that, once loaded, adds the app to the desktop itself |
+| ~:subtitle~ | a few words shown under its icon in the grid, at most 24 characters                     |
+| ~:category~ | where the App Store lists it: ~news~, ~music~, ~productivity~, ~utilities~ or ~games~   |
+| ~:icon~     | a string NAME: the icon is [[file:icons/][icons/]]NAME.svg (16 pixels) and icons/NAME-32.svg (32 pixels) |
+| ~:package~  | how to install it, as below; absent for a part of Emacs                                 |
+| ~:command~  | the command that opens it, a symbol                                                     |
+| ~:feature~  | instead of ~:command~: a library that, once loaded, adds the app to the desktop itself |
 
 ~:package~ is one of:
 
@@ -69,6 +73,8 @@ run of pixels of one colour on a row, ~shape-rendering="crispEdges"~, in the col
 (elfeed
  :kind app
  :name "Elfeed"
+ :subtitle "Web feeds"
+ :category news
  :description "A reader of web feeds, RSS and Atom: ..."
  :icon "elfeed"
  :package (elfeed :url "https://github.com/skeeto/elfeed"
@@ -76,7 +82,39 @@ run of pixels of one colour on a row, ~shape-rendering="crispEdges"~, in the col
  :command elfeed)
 #+end_src
 
+** Extensions
+
+An extension adds to LispM Desktop's editor rather than opening a window of its own: an agent run
+as a CLI, as Hermes.  The App Store lists every extension under Extensions.
+
+| ~:subtitle~ | a few words shown under its icon in the grid, at most 24 characters                    |
+| ~:icon~     | as an app's                                                                            |
+| ~:package~  | ~(PACKAGE :url URL :rev SHA)~: a package of its own, from git, pinned as an app's is   |
+| ~:feature~  | the library that, loaded, makes it take part; unloaded, it takes part no more          |
+| ~:program~  | optional: the program it needs on ~PATH~; without it the App Store greys it out        |
+| ~:install~  | optional: the command installing ~:program~, which the App Store shows and copies      |
+
+#+begin_src lisp-data
+(hermes
+ :kind extension
+ :name "Hermes"
+ :subtitle "Nous Research's agent"
+ :description "Hermes, Nous Research's agent, in the editor beside Claude Code and Codex: ..."
+ :icon "hermes"
+ :program "hermes"
+ :install "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
+ :package (lispm-hermes :url "https://github.com/LispMachineLab/lispm-hermes"
+                        :rev "e1467c745c857082c835a669a3f210c2a835cd13")
+ :feature lispm-hermes)
+#+end_src
+
+An extension's library requires LispM Desktop's (~lispm-desktop-ai~ for an agent, whose
+~lispm-desktop-agent-define~ it calls when loaded) and defines ~FEATURE-unload-function~ undoing
+that, see [[https://github.com/LispMachineLab/lispm-hermes][lispm-hermes]].
+
 ** Roles
+
+The App Store does not list roles or skills: they are LispM Agent's, kept here for it.
 
 A role is a kind of agent for LispM Agent: its instructions and the tools it may use.  It is
 ~:file "roles/ID.org"~, an org file:
@@ -121,13 +159,14 @@ Open a pull request that adds the item to catalog.eld with the files it names, o
 request.  Before you do:
 
 - ~make check~ checks the catalog as LispM Desktop reads it: the properties of each kind, unique
-  IDs, full commit SHAs, the files and icons it names and nothing more in ~icons/~, ~roles/~ and
-  ~skills/~, the IDs ~:requires~ names, roles' keywords, and that skills' code reads.  It needs
-  only Emacs.
-- ~make test~ installs every app's package as LispM Desktop does and checks that its command is
-  there in a new Emacs; checks that every tool a role names is a tool; and calls the skills'
-  tools against the packages they require.  It needs the network, git, and a checkout of
-  lispm-agent beside this one (or ~LISPM_AGENT=path/to/lispm-agent/lisp~).  A new skill brings
+  IDs, apps' categories and short subtitles, full commit SHAs, the files and icons it names and
+  nothing more in ~icons/~, ~roles/~ and ~skills/~, the IDs ~:requires~ names, roles' keywords,
+  and that skills' code reads.  It needs only Emacs.
+- ~make test~ installs every app's and extension's package as LispM Desktop does and checks that
+  an app's command is there in a new Emacs and that an extension loads beside LispM Desktop;
+  checks that every tool a role names is a tool; and calls the skills' tools against the packages
+  they require.  It needs the network, git, and checkouts of lispm-agent and lispm-desktop beside
+  this one (or ~LISPM_AGENT=path/to/lispm-agent/lisp~ and ~LISPM_DESKTOP=path/to/lispm-desktop/lisp~).  A new skill brings
   its own test in [[file:test/lispm-store-test.el][test/lispm-store-test.el]].
 
 CI runs both on Emacs 30.1 and 31.1.
@@ -144,8 +183,8 @@ An item is merged when it keeps these rules:
   ones the user has set up.
 - *Finished assets.*  Only the files an item uses, finished: no drafts, prompts, templates or
   generation scripts, and no file no item names.
-- *Code read as yours.*  A skill's code runs in the user's Emacs when an agent loads it, with
-  everything Emacs can do.  It is reviewed as code you would run yourself: it does what its
+- *Code read as yours.*  An extension's code runs in the user's Emacs once installed, and a
+  skill's when an agent loads it, with everything Emacs can do.  It is reviewed as code you would run yourself: it does what its
   instructions say and nothing else, its tools are of the right permission class, and what
   changes the user's data asks first.
 - *English*, in every file and commit.

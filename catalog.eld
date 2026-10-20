@@ -1,8 +1,9 @@
 ;; -*- lisp-data -*-
 
-;; The catalog of the LispM Store: what LispM Desktop offers to install.
-;; It is data, read and never evaluated; README.org describes its format,
-;; and `make check' checks it.
+;; The catalog of the LispM Store: what LispM Desktop's App Store offers to
+;; install, applications and extensions, and the roles and skills of LispM's
+;; agents.  It is data, read and never evaluated; README.org describes its
+;; format, and `make check' checks it.
 
 (:name "LispM Store"
  :items
@@ -11,6 +12,8 @@
   (elfeed
    :kind app
    :name "Elfeed"
+   :subtitle "Web feeds"
+   :category news
    :description "A reader of web feeds, RSS and Atom: blogs, news and podcasts, searched and tagged in Emacs."
    :icon "elfeed"
    ;; Release 4.2.1.
@@ -21,6 +24,8 @@
   (emms
    :kind app
    :name "EMMS"
+   :subtitle "Music player"
+   :category music
    :description "The Emacs Multimedia System: music and streams played through mpv, mplayer or VLC, with playlists and a browser of your library."
    :icon "emms"
    :package emms
@@ -29,6 +34,8 @@
   (calculator
    :kind app
    :name "Calculator"
+   :subtitle "Calc"
+   :category utilities
    :description "Calc, Emacs's calculator: arbitrary precision, units, matrices, algebra and calculus, in reverse Polish or algebraic notation."
    :icon "calculator"
    :command calc)
@@ -36,11 +43,146 @@
   (calendar
    :kind app
    :name "Calendar"
+   :subtitle "Months and the diary"
+   :category productivity
    :description "Emacs's calendar: months at a glance, holidays, sunrise and sunset, phases of the moon, and the diary."
    :icon "calendar"
    :command calendar)
 
-  ;; Agent roles.
+  ;; Games, built into Emacs.
+
+  (tetris
+   :kind app
+   :name "Tetris"
+   :subtitle "Falling blocks"
+   :category games
+   :description "Fit the falling blocks into whole rows, which clear, before the stack reaches the top."
+   :icon "tetris"
+   :command tetris)
+
+  (snake
+   :kind app
+   :name "Snake"
+   :subtitle "Eat and grow"
+   :category games
+   :description "Steer a snake round the field to eat the fruit; it grows with each one, and the game ends when it runs into a wall or itself."
+   :icon "snake"
+   :command snake)
+
+  (pong
+   :kind app
+   :name "Pong"
+   :subtitle "Bats and a ball"
+   :category games
+   :description "The table tennis of the first video games, for two players at one keyboard."
+   :icon "pong"
+   :command pong)
+
+  (gomoku
+   :kind app
+   :name "Gomoku"
+   :subtitle "Five in a row"
+   :category games
+   :description "Five stones in a row on an open board, against Emacs."
+   :icon "gomoku"
+   :command gomoku)
+
+  (bubbles
+   :kind app
+   :name "Bubbles"
+   :subtitle "Pop the bubbles"
+   :category games
+   :description "Remove groups of touching bubbles of one colour; the bigger the group, the more it scores."
+   :icon "bubbles"
+   :command bubbles)
+
+  (5x5
+   :kind app
+   :name "5x5"
+   :subtitle "Fill the grid"
+   :category games
+   :description "Fill every square of the grid; each move fills or empties a square and the squares beside it."
+   :icon "5x5"
+   :command 5x5)
+
+  (solitaire
+   :kind app
+   :name "Solitaire"
+   :subtitle "Peg solitaire"
+   :category games
+   :description "Jump pegs over one another to take them off the board, until one is left in the middle."
+   :icon "solitaire"
+   :command solitaire)
+
+  (blackbox
+   :kind app
+   :name "Blackbox"
+   :subtitle "Find the hidden balls"
+   :category games
+   :description "Find the balls hidden in a black box by firing rays into it and watching where they come out."
+   :icon "blackbox"
+   :command blackbox)
+
+  (mpuz
+   :kind app
+   :name "Mpuz"
+   :subtitle "A puzzle in letters"
+   :category games
+   :description "A multiplication written in letters: find the digit each letter stands for."
+   :icon "mpuz"
+   :command mpuz)
+
+  (hanoi
+   :kind app
+   :name "Towers of Hanoi"
+   :subtitle "The puzzle, solved"
+   :category games
+   :description "The Towers of Hanoi, solved before your eyes: a tower of discs moved from peg to peg, never a larger disc on a smaller one."
+   :icon "hanoi"
+   :command hanoi)
+
+  (life
+   :kind app
+   :name "Life"
+   :subtitle "Conway's game"
+   :category games
+   :description "Conway's Game of Life: cells living, dying and being born, one generation after another."
+   :icon "life"
+   :command life)
+
+  (dunnet
+   :kind app
+   :name "Dunnet"
+   :subtitle "A text adventure"
+   :category games
+   :description "A text adventure in the manner of Zork, played by typing what to do: look, take the shovel, go east."
+   :icon "dunnet"
+   :command dunnet)
+
+  (doctor
+   :kind app
+   :name "Doctor"
+   :subtitle "The psychotherapist"
+   :category games
+   :description "ELIZA's psychotherapist, who answers what you tell it with questions of its own."
+   :icon "doctor"
+   :command doctor)
+
+  ;; Extensions.
+
+  (hermes
+   :kind extension
+   :name "Hermes"
+   :subtitle "Nous Research's agent"
+   :description "Hermes, Nous Research's agent, in the editor beside Claude Code and Codex: started in a terminal at the project, its sessions listed and resumed, and Emacs's state shown to it."
+   :icon "hermes"
+   :program "hermes"
+   :install "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
+   :package (lispm-hermes :url "https://github.com/LispMachineLab/lispm-hermes"
+                          :rev "e1467c745c857082c835a669a3f210c2a835cd13")
+   :feature lispm-hermes)
+
+  ;; Agent roles, LispM Agent's: the App Store does not list them.
 
   (reviewer
    :kind role
@@ -54,7 +196,7 @@
    :description "Answers questions from the web and the project's files, reading sources rather than snippets, and cites them."
    :file "roles/researcher.org")
 
-  ;; Skills.
+  ;; Skills, LispM Agent's too.
 
   (feeds
    :kind skill

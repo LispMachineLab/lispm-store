@@ -33,13 +33,18 @@ jobs:
         emacs: ['30.1', '31.1']
     steps:
       - uses: actions/checkout@v7
-      # The agents whose roles and skills these are, from their own repository.
+      # The agents whose roles and skills these are, and the desktop the
+      # extensions extend, from their own repositories.
       - uses: actions/checkout@v7
         with:
           repository: LispMachineLab/lispm-agent
           path: .deps/lispm-agent
+      - uses: actions/checkout@v7
+        with:
+          repository: LispMachineLab/lispm-desktop
+          path: .deps/lispm-desktop
       - uses: purcell/setup-emacs@v8.0
         with:
           version: ${{ matrix.emacs }}
       - name: Test
-        run: make test LISPM_AGENT=.deps/lispm-agent/lisp
+        run: make test LISPM_AGENT=.deps/lispm-agent/lisp LISPM_DESKTOP=.deps/lispm-desktop/lisp
