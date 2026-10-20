@@ -1,0 +1,222 @@
+#+title: Play music
+#+description: Play music with EMMS, Emacs's multimedia system: files, folders, playlists and streams; pause, skip, shuffle and seek; say what is playing and what comes next.
+
+EMMS plays music through a player program (mpv, mplayer, VLC, ...) and keeps what it plays in a
+playlist, a buffer of tracks one of which is selected.  This skill gives you tools over EMMS, and
+the functions behind them for ~eval_elisp~.  If the user has not chosen players
+(~emms-player-list~), loading it sets up EMMS's defaults; one of those programs must be
+installed for anything to play.
+
+* What is there
+
+- ~music_status~: playing, paused or stopped; the selected track, its place in the playlist
+  and, when EMMS knows them, how far it has played and how long it is.
+- ~music_playlist~: the tracks of the playlist, numbered, the selected one marked.
+- ~music_find~ QUERY: music files whose path matches a regular expression, in the user's music
+  directory (~emms-source-file-default-directory~, else =~/Music/=) or in another you name.
+  Paths name artists, albums and titles: search them before asking the user where a song is.
+
+* Playing
+
+- ~music_play~ WHAT: a file, a directory (with its subdirectories), a playlist file (.m3u, .pls)
+  or a stream's URL; it replaces the playlist and starts playing, or, with ADD, goes at the
+  end of the playlist.  With TRACK instead, it plays that track of the playlist.
+- ~music_control~ ACTION: pause, resume, stop, next, previous, random (a random track),
+  shuffle (the playlist) or seek (SECONDS, negative to go back).
+
+Both say what plays afterwards.  They are of the permission class ~media~, which waits for the
+user's approval unless their policy lets it run.  Play only what the user asked for, and
+change what is playing only when they say so: music is theirs to listen to.
+
+* Beyond the tools
+
+With ~eval_elisp~: ~(emms)~ shows the user the playlist; ~(emms-volume-raise)~ and
+~(emms-volume-lower)~, after ~(require 'emms-volume)~, change the volume if EMMS knows the
+system's mixer (~emms-volume-change-function~); ~(lispm-music-tracks)~ is the playlist as a list
+of ~(TRACK . SELECTED)~, and ~(emms-track-get TRACK 'info-artist)~ (also ~info-title~,
+~info-album~, ~info-playing-time~) what EMMS knows of a track.
+
+* The code
+
+#+begin_src emacs-lisp :lispm load
+(require 'emms)
+(require 'emms-setup)
+(require 'emms-source-file)
+(require 'emms-source-playlist)
+(require 'emms-playlist-mode)
+
+;; Players: those the user chose, else EMMS's own list, of which it
+;; uses whichever programs are installed.
+(unless emms-player-list
+  (emms-minimalistic)
+  (emms-default-players))
+
+(defvar lispm-music-max-results 50
+  "Files music_find returns unless asked for another number.")
+
+(defvar lispm-music-playlist-max 200
+  "Tracks music_playlist lists at most.")
+
+(defun lispm-music-tracks ()
+  "The tracks of EMMS's playlist, in order: a list of (TRACK . SELECTED)."
+  (when (buffer-live-p emms-playlist-buffer)
+    (with-current-emms-playlist
+      (save-excursion
+        (save-restriction
+          (widen)
+          (goto-char (point-min))
+          (let (tracks)
+            (emms-walk-tracks
+              (push (cons (emms-playlist-track-at (point)) (emms-playlist-selected-track-at-p))
+                    tracks))
+            (nreverse tracks)))))))
+
+(defun lispm-music--time (seconds)
+  "SECONDS as M:SS, or H:MM:SS."
+  (let ((seconds (round seconds)))
+    (if (>= seconds 3600)
+        (format "%d:%02d:%02d" (/ seconds 3600) (% (/ seconds 60) 60) (% seconds 60))
+      (format "%d:%02d" (/ seconds 60) (% seconds 60)))))
+
+(defun lispm-music-status ()
+  "What EMMS is doing, in a sentence or two."
+  (let* ((tracks (lispm-music-tracks))
+         (selected (cl-position-if #'cdr tracks))
+         (track (and selected (car (nth selected tracks))))
+         (duration (and track (emms-track-get track 'info-playing-time))))
+    (concat (cond ((not emms-player-playing-p) "Stopped")
+                  (emms-player-paused-p "Paused")
+                  (t "Playing"))
+            (if track
+                (format ": %s, track %d of %d" (emms-track-description track) (1+ selected)
+                        (length tracks))
+              (if tracks (format "; %d tracks in the playlist" (length tracks)) "; the playlist is empty"))
+            (cond ((and emms-player-playing-p (bound-and-true-p emms-playing-time-mode))
+                   (format " (%s%s)" (lispm-music--time emms-playing-time)
+                           (if duration (format " of %s" (lispm-music--time duration)) "")))
+                  (duration (format " (%s)" (lispm-music--time duration)))
+                  (t ""))
+            ".")))
+
+(defun lispm-music--source (what)
+  "The EMMS source that plays WHAT, with its argument: (SOURCE ARGUMENT)."
+  (let ((file (expand-file-name what)))
+    (cond ((string-match-p "\\`[a-z][a-z0-9+.-]*://" what) (list 'emms-source-url what))
+          ((file-directory-p file) (list 'emms-source-directory-tree file))
+          ((not (file-readable-p file)) (error "No such file or directory: %s" what))
+          ((string-match-p "\\.\\(?:m3u8?\\|pls\\)\\'" file) (list 'emms-source-playlist file))
+          (t (list 'emms-source-file file)))))
+
+(defun lispm-music--select (n)
+  "Select the Nth track of EMMS's playlist, counting from 1."
+  (with-current-emms-playlist
+    (save-excursion
+      (save-restriction
+        (widen)
+        (goto-char (point-min))
+        (let ((i 0) position)
+          (emms-walk-tracks
+            (when (= (cl-incf i) n)
+              (setq position (point))))
+          (unless position
+            (error "The playlist has %d tracks" i))
+          (emms-playlist-select position))))))
+
+(defun lispm-music--step (n)
+  "Play the next track if N is 1, the previous one if -1.
+Unlike `emms-next' and `emms-previous', which stop the music first,
+an error if there is no such track leaves the music playing."
+  (let* ((tracks (lispm-music-tracks))
+         (selected (cl-position-if #'cdr tracks)))
+    (unless (and selected (< -1 (+ selected n) (length tracks)))
+      (error "There is no %s track in the playlist" (if (> n 0) "next" "previous")))
+    (if (> n 0) (emms-next) (emms-previous))))
+
+(defun lispm-music--file-regexp ()
+  "A regexp matching the names of the files EMMS can play, and of playlists."
+  (concat "\\." (regexp-opt (append emms-player-base-format-list '("m3u" "m3u8" "pls"))) "\\'"))
+
+(lispm-deftool music_status ()
+  "Say what EMMS is doing: playing, paused or stopped, and which track."
+  (lispm-music-status))
+
+(lispm-deftool music_playlist ()
+  "List the tracks of EMMS's playlist, numbered, the selected one marked with >."
+  (let ((tracks (lispm-music-tracks)) (n 0))
+    (if (null tracks)
+        "The playlist is empty."
+      (concat (mapconcat (lambda (entry)
+                           (format "%s%3d. %s" (if (cdr entry) "> " "  ") (cl-incf n)
+                                   (emms-track-description (car entry))))
+                         (seq-take tracks lispm-music-playlist-max) "\n")
+              (if (> (length tracks) lispm-music-playlist-max)
+                  (format "\n[... %d more tracks]" (- (length tracks) lispm-music-playlist-max))
+                "")))))
+
+(lispm-deftool music_find
+    ((query string "A regular expression matched against the files' paths below the directory, case ignored.")
+     (directory string "The directory to search (default: the user's music directory)." :optional t)
+     (max-results integer "How many files to return at most (default 50)." :optional t))
+  "Find music files and playlists whose path matches QUERY."
+  (let* ((root (file-name-as-directory
+                (expand-file-name (or directory emms-source-file-default-directory "~/Music/"))))
+         (case-fold-search t))
+    (unless (file-directory-p root)
+      (error "No directory %s: name one, or set emms-source-file-default-directory" root))
+    (let* ((files (directory-files-recursively
+                   root (lispm-music--file-regexp) nil
+                   (lambda (subdirectory)
+                     (not (string-prefix-p "." (file-name-nondirectory subdirectory))))))
+           (matches (seq-filter (lambda (file) (string-match-p query (file-relative-name file root)))
+                                files))
+           (shown (seq-take matches (or max-results lispm-music-max-results))))
+      (cond ((null files) (format "No music files in %s." (abbreviate-file-name root)))
+            ((null matches) (format "None of the %d music files in %s matches %S."
+                                    (length files) (abbreviate-file-name root) query))
+            (t (concat (mapconcat #'abbreviate-file-name shown "\n")
+                       (if (< (length shown) (length matches))
+                           (format "\n[%d of %d matches]" (length shown) (length matches))
+                         "")))))))
+
+(lispm-deftool music_play
+    ((what string "A music file, a directory (played with its subdirectories), a playlist file (.m3u, .pls) or a stream's URL."
+           :optional t)
+     (add boolean "Add WHAT to the end of the playlist instead of playing it now (default false)."
+          :optional t)
+     (track integer "Play this track of the playlist instead, counting from 1." :optional t))
+  "Play music with EMMS, or add it to the playlist; then say what plays."
+  :permission media
+  (cond (track
+         (lispm-music--select track)
+         (emms-stop)
+         (emms-start))
+        (what
+         ;; EMMS lists a directory's files with find when it finds one,
+         ;; in a regexp only GNU find reads; it finds nothing with the
+         ;; find of macOS or the BSDs.  Emacs lists them everywhere.
+         (let ((emms-source-file-directory-tree-function #'emms-source-file-directory-tree-internal))
+           (apply (if add #'emms-source-add #'emms-source-play) (lispm-music--source what))))
+        (t (error "Name what to play, or a track of the playlist")))
+  (lispm-music-status))
+
+(lispm-deftool music_control
+    ((action string "What to do."
+             :enum ("pause" "resume" "stop" "next" "previous" "random" "shuffle" "seek"))
+     (seconds number "For seek: the seconds to move by, negative to go back." :optional t))
+  "Pause, resume, stop, skip, shuffle or seek what EMMS plays; then say what plays."
+  :permission media
+  (pcase action
+    ("pause" (when (and emms-player-playing-p (not emms-player-paused-p))
+               (emms-pause)))
+    ("resume" (cond (emms-player-paused-p (emms-pause))
+                    ((not emms-player-playing-p) (emms-start))))
+    ("stop" (emms-stop))
+    ("next" (lispm-music--step 1))
+    ("previous" (lispm-music--step -1))
+    ("random" (emms-random))
+    ("shuffle" (emms-shuffle))
+    ("seek" (if seconds
+                (emms-seek seconds)
+              (error "Say how many seconds to seek by"))))
+  (lispm-music-status))
+#+end_src
