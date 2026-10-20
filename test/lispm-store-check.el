@@ -361,7 +361,12 @@ Returns (KEYWORDS . BODY)."
           (dolist (other requires)
             (cond ((eq other id) (lispm-store-check--problem "%s: requires itself" id))
                   ((not (assq other items))
-                   (lispm-store-check--problem "%s: requires %S, which is not in the catalog" id other))))))))
+                   (lispm-store-check--problem "%s: requires %S, which is not in the catalog" id other))
+                  ;; LispM Desktop installs apps and extensions only.
+                  ((and (memq (plist-get item :kind) '(app extension))
+                        (not (memq (plist-get (cdr (assq other items)) :kind) '(app extension))))
+                   (lispm-store-check--problem "%s: requires %S, which the App Store does not install"
+                                               id other))))))))
   ;; A cycle would leave no order to install them in.
   (let (done)
     (cl-labels ((visit (id path)
