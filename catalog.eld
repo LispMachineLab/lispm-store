@@ -179,7 +179,7 @@
    :program "hermes"
    :install "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
    :package (lispm-hermes :url "https://github.com/LispMachineLab/lispm-hermes"
-                          :rev "e1467c745c857082c835a669a3f210c2a835cd13")
+                          :rev "aeb7af55924f4e8bb65e8d0df00bc0fbcd38b7c5")
    :feature lispm-hermes)
 
   ;; Agent roles, LispM Agent's: the App Store does not list them.
