@@ -1,0 +1,7 @@
+#+title: LispM Store
+
+The catalog of the LispM Store: the applications, agent roles and skills LispM Desktop offers to
+install, kept as plain data, with the icons, roles and skills it lists.
+
+LispM Store is free software under the GNU General Public License, version 3 or later (see
+LICENSE).
