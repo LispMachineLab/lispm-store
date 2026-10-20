@@ -152,5 +152,5 @@ An item is merged when it keeps these rules:
 
 * License
 
-LispM Store is free software under the GNU General Public License, version 3 or later (see
+LispM Store is free software under the GNU Affero General Public License, version 3 or later (see
 [[file:LICENSE][LICENSE]]).  The packages its apps install are their authors', under their own licenses.
