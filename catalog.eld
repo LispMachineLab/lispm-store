@@ -106,6 +106,19 @@
    :icon "erc"
    :command erc-tls)
 
+  (slack
+   :kind app
+   :name "Slack"
+   :subtitle "Workspaces and channels"
+   :category social
+   :description "emacs-slack: your Slack workspaces' channels and direct messages, signed in to with the token and cookie Slack's web app signs in with, which auth-source keeps."
+   :icon "slack"
+   ;; No releases; a commit of main that was read.
+   :package (slack :url "https://github.com/emacs-slack/emacs-slack"
+                   :rev "8163416ce7d1074d62df764b9071d92c63fc8888")
+   :command slack-start
+   :needs ((program "curl" :for "talking to Slack and fetching its files" :brew "curl")))
+
   ;; Games, built into Emacs.
 
   (tetris
