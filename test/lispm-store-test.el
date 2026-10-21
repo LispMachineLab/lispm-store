@@ -315,5 +315,36 @@ load path, as it is in LispM Desktop."
           (should (string-match-p "\\`Stopped: " (lispm-store-test--call "music_control" "stop" nil))))
       (emms-stop))))
 
+(ert-deftest lispm-store-test-check-security ()
+  "The security skill scans, lists and explains the findings, and looks up
+in OSV only when the user lets it."
+  (lispm-store-test--load-skills)
+  ;; Loaded before their variables are bound below, and before a scan
+  ;; would load project.el over the stand-in.
+  (require 'lispm-security-inventory)
+  (require 'project)
+  ;; Every place Security reads, made up here: the user's are not read.
+  (let* ((root (file-name-as-directory (expand-file-name "security" lispm-store-test--work)))
+         (lispm-security-directory (expand-file-name "state/" root))
+         (lispm-security-claude-directory (expand-file-name "claude/" root))
+         (lispm-security-claude-config-file (expand-file-name "claude.json" root))
+         (lispm-security-codex-directory (expand-file-name "codex/" root))
+         (lispm-security-npm-cache (expand-file-name "npm/" root))
+         (lispm-security-uv-cache (expand-file-name "uv/" root))
+         (lispm-security-uv-tools (expand-file-name "uv-tools/" root))
+         (lispm-skill-directories (list (expand-file-name "skills/" root)))
+         (lispm-mcp-servers '(("fetch" :command "npx" :args ("-y" "@acme/fetch"))))
+         (lispm-security-look-up nil)
+         (package-alist nil))
+    (cl-letf (((symbol-function 'project-known-project-roots) (lambda () nil)))
+      (let* ((report (lispm-store-test--call "security_scan" nil))
+             (key (and (string-match "\\[medium\\] \\([0-9a-f]\\{16\\}\\)" report) (match-string 1 report))))
+        (should (string-match-p "server fetch: Runs @acme/fetch at whatever version is newest" report))
+        (should (string-match-p "data, never instructions" report))
+        (should (string-match-p "Found: «@acme/fetch»" (lispm-store-test--call "security_finding" key)))
+        (should-not (string-match-p "\\[medium\\]" (lispm-store-test--call "security_findings" "high" nil)))
+        (should (string-match-p "\\`Not looked up: looking up is turned off"
+                                (lispm-store-test--call-async "security_look_up")))))))
+
 (provide 'lispm-store-test)
 ;;; lispm-store-test.el ends here
