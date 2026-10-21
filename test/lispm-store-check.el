@@ -46,7 +46,7 @@
     (skill :required (:kind :name :description :file) :optional (:requires)))
   "The properties of an item of each kind.")
 
-(defconst lispm-store-check-categories '(news music productivity utilities games)
+(defconst lispm-store-check-categories '(news music social productivity utilities games)
   "The categories an app may name; the App Store puts extensions in their own.")
 
 (defconst lispm-store-check-subtitle-length 24

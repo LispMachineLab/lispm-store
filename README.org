@@ -48,7 +48,7 @@ An app is something LispM Desktop opens in a window of its own: it has an icon t
 its own menus in the menu bar while it is in front.
 
 | ~:subtitle~ | a few words shown under its icon in the grid, at most 24 characters                     |
-| ~:category~ | where the App Store lists it: ~news~, ~music~, ~productivity~, ~utilities~ or ~games~   |
+| ~:category~ | where the App Store lists it: ~news~, ~music~, ~social~, ~productivity~, ~utilities~ or ~games~ |
 | ~:icon~     | a string NAME: the icon is [[file:icons/][icons/]]NAME.svg (16 pixels) and icons/NAME-32.svg (32 pixels) |
 | ~:package~  | how to install it, as below; absent for a part of Emacs                                 |
 | ~:command~  | the command that opens it, a symbol                                                     |
