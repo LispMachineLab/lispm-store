@@ -95,6 +95,17 @@
                             :rev "6486295285c68eca1a92306f03cc60203c2b5c24")
    :command lispm-security)
 
+  ;; To chat with.
+
+  (erc
+   :kind app
+   :name "ERC"
+   :subtitle "IRC chat"
+   :category social
+   :description "ERC, Emacs's own IRC client: the networks you are on, Libera.Chat or another, each over its channels and the people talking with you, connected to again as it opens."
+   :icon "erc"
+   :command erc-tls)
+
   ;; Games, built into Emacs.
 
   (tetris
