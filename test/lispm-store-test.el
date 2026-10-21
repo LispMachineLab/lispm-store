@@ -183,6 +183,25 @@ package, which loads more of it than its autoloads."
                                          (featurep (require ',feature))))))
                      (list id t))))))
 
+(ert-deftest lispm-store-test-needs-name-the-apps-own ()
+  "The commands and options an app's needs name are its own: commands
+once its package is installed, options once it is loaded.  In a new
+Emacs, as after a restart."
+  (lispm-store-test--install)
+  (pcase-dolist (`(,id . ,item) (lispm-store-test--of-kind 'app))
+    (let ((package (plist-get item :package)))
+      (dolist (need (plist-get item :needs))
+        (let ((properties (cddr need)))
+          (dolist (command (plist-get properties :commands))
+            (should (equal (list id command (lispm-store-test--emacs `(commandp ',command)))
+                           (list id command t))))
+          (dolist (variable (plist-get properties :variables))
+            (should (equal (list id variable
+                                 (lispm-store-test--emacs
+                                  `(progn (require ',(if (consp package) (car package) package))
+                                          (boundp ',variable))))
+                           (list id variable t)))))))))
+
 (ert-deftest lispm-store-test-extensions-load ()
   "Each extension's package, once installed, loads beside LispM Desktop and
 provides its feature.  In a new Emacs, with LispM Desktop's lisp/ on its

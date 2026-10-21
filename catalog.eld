@@ -30,10 +30,10 @@
    :icon "emms"
    :package emms
    :command emms-browser
-   :programs (("mpv" :for "playing music" :instead ("afplay") :more "seeking and radio streams"
-               :install "brew install mpv")
-              ("exiftool" :for "reading the tags of AAC and Apple Lossless files" :instead ("mdls")
-               :more "the tags Spotlight has not read" :install "brew install exiftool")))
+   :needs ((program "mpv" :for "playing music" :brew "mpv"
+                    :instead ("afplay") :more "seeking and radio streams")
+           (program "exiftool" :for "reading the tags of AAC and Apple Lossless files" :brew "exiftool"
+                    :instead ("mdls") :more "the tags Spotlight has not read")))
 
   (yeetube
    :kind app
@@ -45,7 +45,15 @@
    ;; Release 2.3.1, whose tag is named 0.2.3.
    :package (yeetube :url "https://git.thanosapollo.org/yeetube"
                      :rev "4bbb5c37b77811b69b2d4483bdb7042247c587a1")
-   :command yeetube-search)
+   :command yeetube-search
+   ;; mpv plays YouTube's videos through yt-dlp.
+   :needs ((program "mpv" :for "playing videos" :brew "mpv"
+                    :commands (yeetube-play yeetube-replay yeetube-play-saved-video)
+                    :variables (yeetube-mpv-program))
+           (program "yt-dlp" :for "downloading videos, and playing them in mpv" :brew "yt-dlp"
+                    :commands (yeetube-play yeetube-replay yeetube-play-saved-video
+                               yeetube-download-video yeetube-download-videos)
+                    :variables (yeetube-ytdlp-program))))
 
   (calculator
    :kind app
