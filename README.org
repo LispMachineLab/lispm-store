@@ -53,7 +53,7 @@ its own menus in the menu bar while it is in front.
 | ~:package~  | how to install it, as below; absent for a part of Emacs                                 |
 | ~:command~  | the command that opens it, a symbol                                                     |
 | ~:feature~  | instead of ~:command~: a library that, once loaded, adds the app to the desktop itself |
-| ~:programs~ | optional: the programs it uses beyond Emacs, as below                                   |
+| ~:needs~    | optional: the programs, libraries and applications it uses beyond Emacs, as below      |
 
 ~:package~ is one of:
 
@@ -69,19 +69,33 @@ autoloads.  A ~:feature~ is a library the package provides, loading beside LispM
 as [[https://github.com/LispMachineLab/lispm-stickies][lispm-stickies]]: loaded, it makes the app with ~lispm-desktop-define-app~ and the item's ID
 for its key; unloaded, as when the App Store removes the app, it takes it away again.
 
-~:programs~ lists the programs an app uses beyond Emacs, each ~(NAME :for WHAT :install COMMAND
-:instead STAND-INS :more WHAT-MORE)~: NAME the program on ~PATH~, WHAT what the app uses it for,
-COMMAND how to install it, STAND-INS programs doing its work when it is missing, as macOS's own
-~afplay~ plays music where ~mpv~ is not installed, and WHAT-MORE what it does that they do not.
-A program missing does not keep an app from being installed: the App Store's information says
-it is missing and copies COMMAND, and the app's window says so as it opens, unless a stand-in is
-installed, and offers COMMAND in its Help menu.
+~:needs~ lists what an app uses beyond Emacs, each ~(KIND NAME :for WHAT ...)~: KIND ~program~ (NAME on
+~PATH~), ~library~ or ~application~ (NAME.app), and WHAT what the app uses it for.  The rest say how
+it installs and what may do without it:
+
+| ~:brew~      | the Homebrew formula installing it; ~:cask~, the cask, for an application            |
+| ~:xcode~     | ~t~ for a program of Apple's command line tools, as ~git~ or ~swift~                       |
+| ~:instead~   | programs doing its work while it is missing, as macOS's ~afplay~ plays music without ~mpv~ |
+| ~:more~      | what it does that they do not                                                        |
+| ~:commands~  | the app's commands needing it: run while it is missing, they offer to install it first |
+| ~:variables~ | the app's options holding it, which its package set as it loaded: set again once it is there |
+| ~:file~      | a library's file, under its formula's prefix                                         |
+| ~:bundle~    | an application's bundle identifier, to find it wherever it is                        |
+
+What is missing does not keep an app from being installed.  Get installs it with the app, the
+alert asking for both, in LispM Desktop's Installer: one install at a time, Homebrew first where it
+is not installed (its installer asks for the password in a terminal), with a Try Again for what
+fails.  The app's information says what is missing, and Install Missing installs it; the app's
+window offers it as it opens, unless something stands in, and in its Help menu.  The catalog names
+what Homebrew installs, never a command: ~:brew~ and ~:cask~ are names.
 
 #+begin_src lisp-data
-(emms
+(yeetube
  ...
- :programs (("mpv" :for "playing music" :instead ("afplay") :more "seeking and radio streams"
-             :install "brew install mpv")))
+ :needs ((program "mpv" :for "playing videos" :brew "mpv"
+                  :commands (yeetube-play) :variables (yeetube-mpv-program))
+         (program "yt-dlp" :for "downloading videos" :brew "yt-dlp"
+                  :commands (yeetube-play yeetube-download-video) :variables (yeetube-ytdlp-program))))
 #+end_src
 
 The icons are pixel art in the Platinum style of [[https://github.com/LispMachineLab/lispm-desktop/tree/main/icons/os9][LispM Desktop's own]]: an SVG of one ~rect~ per

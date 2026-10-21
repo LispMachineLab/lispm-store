@@ -39,7 +39,7 @@
 
 (defconst lispm-store-check-keys
   '((app :required (:kind :name :subtitle :category :description :icon)
-         :optional (:package :command :feature :programs :requires))
+         :optional (:package :command :feature :needs :requires))
     (extension :required (:kind :name :subtitle :description :icon :package :feature)
                :optional (:program :install :requires))
     (role :required (:kind :name :description :file) :optional (:requires))
@@ -197,31 +197,54 @@
     (unless (memq (plist-get item :category) lispm-store-check-categories)
       (lispm-store-check--problem "%s: :category is one of %s" id
                                   (mapconcat #'symbol-name lispm-store-check-categories ", ")))
-    (when (plist-member item :programs)
-      (lispm-store-check--programs id (plist-get item :programs)))
+    (when (plist-member item :needs)
+      (lispm-store-check--needs id (plist-get item :needs)))
     (lispm-store-check--icons id icon)))
 
-(defun lispm-store-check--programs (id programs)
-  "Check the :programs of the app ID: each (NAME :for WHAT :install COMMAND
-:instead STAND-INS :more WHAT-MORE), NAME a program's name, :for given."
-  (if (not (proper-list-p programs))
-      (lispm-store-check--problem "%s: :programs is a list of (NAME :for WHAT ...)" id)
-    (dolist (program programs)
-      (let ((name (car-safe program))
-            (properties (cdr-safe program)))
-        (cond ((not (lispm-store-check--line-p name))
-               (lispm-store-check--problem "%s: a program of :programs is (NAME :for WHAT ...), NAME a string" id))
+(defconst lispm-store-check-need-kinds '(program library application)
+  "The kinds of what an app may need beyond Emacs.")
+
+(defconst lispm-store-check-need-keys
+  '(:for :brew :cask :xcode :instead :more :commands :variables :file :bundle)
+  "The properties of a need.")
+
+(defun lispm-store-check--needs (id needs)
+  "Check the :needs of the app ID: each (KIND NAME :for WHAT ...), as
+README.org describes, installed by Homebrew's names alone."
+  (if (not (proper-list-p needs))
+      (lispm-store-check--problem "%s: :needs is a list of (KIND NAME :for WHAT ...)" id)
+    (dolist (need needs)
+      (let ((kind (car-safe need))
+            (name (car-safe (cdr-safe need)))
+            (properties (cdr-safe (cdr-safe need))))
+        (cond ((not (memq kind lispm-store-check-need-kinds))
+               (lispm-store-check--problem "%s: a need is (KIND NAME ...), KIND one of %s" id
+                                           (mapconcat #'symbol-name lispm-store-check-need-kinds ", ")))
+              ((not (lispm-store-check--line-p name))
+               (lispm-store-check--problem "%s: a need is (KIND NAME ...), NAME a string" id))
               ((lispm-store-check--plist-p properties (format "%s: %s" id name))
                (cl-loop for (key) on properties by #'cddr
-                        unless (memq key '(:for :install :instead :more))
-                        do (lispm-store-check--problem "%s: %s: %s is not a property of a program" id name key))
-               (dolist (key '(:for :install :more))
+                        unless (memq key lispm-store-check-need-keys)
+                        do (lispm-store-check--problem "%s: %s: %s is not a property of a need" id name key))
+               (dolist (key '(:for :more :file :bundle))
                  (when (or (eq key :for) (plist-member properties key))
                    (unless (lispm-store-check--line-p (plist-get properties key))
                      (lispm-store-check--problem "%s: %s: %s is a string of one line" id name key))))
+               ;; Names Homebrew installs, never a command to run.
+               (dolist (key '(:brew :cask))
+                 (when (plist-member properties key)
+                   (unless (and (stringp (plist-get properties key))
+                                (string-match-p "\\`[a-z0-9][a-z0-9@+._/-]*\\'" (plist-get properties key)))
+                     (lispm-store-check--problem "%s: %s: %s is the name of what Homebrew installs" id name key))))
+               (when (and (plist-member properties :xcode) (not (eq (plist-get properties :xcode) t)))
+                 (lispm-store-check--problem "%s: %s: :xcode is t" id name))
                (let ((instead (plist-get properties :instead)))
                  (unless (and (proper-list-p instead) (seq-every-p #'lispm-store-check--line-p instead))
-                   (lispm-store-check--problem "%s: %s: :instead is a list of programs' names" id name)))))))))
+                   (lispm-store-check--problem "%s: %s: :instead is a list of programs' names" id name)))
+               (dolist (key '(:commands :variables))
+                 (let ((symbols (plist-get properties key)))
+                   (unless (and (proper-list-p symbols) (seq-every-p #'lispm-store-check--command-p symbols))
+                     (lispm-store-check--problem "%s: %s: %s is a list of symbols" id name key))))))))))
 
 (defun lispm-store-check--subtitle (id subtitle)
   "Check the SUBTITLE of the item ID: a few words on one line."
