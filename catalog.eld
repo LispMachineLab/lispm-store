@@ -26,10 +26,14 @@
    :name "EMMS"
    :subtitle "Music player"
    :category music
-   :description "The Emacs Multimedia System: music and streams played through mpv, mplayer or VLC, with playlists and a browser of your library."
+   :description "The Emacs Multimedia System: your Music library and folders of music, played through mpv or macOS's afplay, with playlists and a browser of your library."
    :icon "emms"
    :package emms
-   :command emms-browser)
+   :command emms-browser
+   :programs (("mpv" :for "playing music" :instead ("afplay") :more "seeking and radio streams"
+               :install "brew install mpv")
+              ("exiftool" :for "reading the tags of AAC and Apple Lossless files" :instead ("mdls")
+               :more "the tags Spotlight has not read" :install "brew install exiftool")))
 
   (calculator
    :kind app
