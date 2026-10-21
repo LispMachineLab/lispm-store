@@ -74,6 +74,7 @@ for its key; unloaded, as when the App Store removes the app, it takes it away a
 it installs and what may do without it:
 
 | ~:brew~      | the Homebrew formula installing it; ~:cask~, the cask, for an application            |
+| ~:head~      | ~t~ to install the formula's HEAD, built from its latest sources, where its release is too old |
 | ~:xcode~     | ~t~ for a program of Apple's command line tools, as ~git~ or ~swift~                       |
 | ~:instead~   | programs doing its work while it is missing, as macOS's ~afplay~ plays music without ~mpv~ |
 | ~:more~      | what it does that they do not                                                        |

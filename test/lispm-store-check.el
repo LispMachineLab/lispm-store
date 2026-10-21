@@ -205,7 +205,7 @@
   "The kinds of what an app may need beyond Emacs.")
 
 (defconst lispm-store-check-need-keys
-  '(:for :brew :cask :xcode :instead :more :commands :variables :file :bundle)
+  '(:for :brew :cask :head :xcode :instead :more :commands :variables :file :bundle)
   "The properties of a need.")
 
 (defun lispm-store-check--needs (id needs)
@@ -236,8 +236,11 @@ README.org describes, installed by Homebrew's names alone."
                    (unless (and (stringp (plist-get properties key))
                                 (string-match-p "\\`[a-z0-9][a-z0-9@+._/-]*\\'" (plist-get properties key)))
                      (lispm-store-check--problem "%s: %s: %s is the name of what Homebrew installs" id name key))))
-               (when (and (plist-member properties :xcode) (not (eq (plist-get properties :xcode) t)))
-                 (lispm-store-check--problem "%s: %s: :xcode is t" id name))
+               (dolist (key '(:xcode :head))
+                 (when (and (plist-member properties key) (not (eq (plist-get properties key) t)))
+                   (lispm-store-check--problem "%s: %s: %s is t" id name key)))
+               (when (and (plist-get properties :head) (not (plist-get properties :brew)))
+                 (lispm-store-check--problem "%s: %s: :head is a :brew formula's" id name))
                (let ((instead (plist-get properties :instead)))
                  (unless (and (proper-list-p instead) (seq-every-p #'lispm-store-check--line-p instead))
                    (lispm-store-check--problem "%s: %s: :instead is a list of programs' names" id name)))
