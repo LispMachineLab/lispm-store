@@ -310,4 +310,11 @@
    :name "Chat on IRC"
    :description "Lets agents list your IRC conversations in ERC with what is unread, read and search what was said, and send a message once you approve it."
    :file "skills/chat-irc.org"
-   :requires (erc))))
+   :requires (erc))
+
+  (chat-slack
+   :kind skill
+   :name "Chat on Slack"
+   :description "Lets agents list your Slack conversations with what is unread, read their messages and threads, search with Slack's search, and send a message once you approve it."
+   :file "skills/chat-slack.org"
+   :requires (slack))))
