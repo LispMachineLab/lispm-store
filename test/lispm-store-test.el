@@ -441,9 +441,12 @@ to them, against a fake IRC server."
                                                           (buffer-local-value 'erc-server-connected
                                                                               (get-buffer "TestNet"))))))
           (with-current-buffer "TestNet"
-            (erc-cmd-JOIN "#lisp"))
-          (should (lispm-store-test--wait (lambda () (and (get-buffer "#lisp")
-                                                          (with-current-buffer "#lisp" erc-channel-topic)))))
+            (erc-cmd-JOIN "#lisp")
+            (erc-cmd-JOIN "#emacs"))
+          (should (lispm-store-test--wait (lambda () (and (get-buffer "#lisp") (get-buffer "#emacs")
+                                                          (with-current-buffer "#lisp" erc-channel-topic)
+                                                          (with-current-buffer "#emacs" erc-channel-topic)))))
+          (lispm-store-test--irc-say ":bob!b@example.org PRIVMSG #emacs :lispmachines, anyone?")
           (lispm-store-test--irc-say ":alice!a@example.org PRIVMSG #lisp :lispm: have you tried the agents?")
           (lispm-store-test--irc-say ":bob!b@example.org PRIVMSG #lisp :\1ACTION waves\1")
           (lispm-store-test--irc-say ":carol!c@example.org JOIN #lisp")
@@ -453,6 +456,7 @@ to them, against a fake IRC server."
             (should (string-match-p "\\`TestNet: connected as lispm\n" list))
             (should (string-match-p "^  #lisp: [0-9]+ unread, naming the user; 4 people; topic: Lisp machines, then and now$"
                                     list))
+            (should (string-match-p "^  #emacs: [0-9]+ unread; 3 people; topic: " list))
             (should (string-match-p "^  alice (private): 1 unread, naming the user$" list)))
           ;; What people said; and with all, the rest.
           (let ((read (lispm-store-test--call "irc_read" "#lisp" nil nil nil)))
@@ -479,7 +483,7 @@ to them, against a fake IRC server."
             (should (string-match-p "\\`alice [0-9]+\\. .*<alice> a word in private\n#lisp [0-9]+\\. .*<alice> lispm: have"
                                     found)))
           (should-not (string-match-p "private" (lispm-store-test--call "irc_search" "private\\|agents" "#lisp" nil)))
-          (should (string-match-p "\\`Nothing said" (lispm-store-test--call "irc_search" "emacs" nil nil)))
+          (should (string-match-p "\\`Nothing said" (lispm-store-test--call "irc_search" "emacs" "#lisp" nil)))
           ;; Sending asks the user every time, and sends lines as text.
           (let ((tool (lispm-get-tool "irc_send")))
             (should (eq (lispm-tool-permission tool) 'chat))

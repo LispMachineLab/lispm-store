@@ -11,8 +11,9 @@ them for ~eval_elisp~.
 
 - ~irc_conversations~: each network, whether ERC is connected to it and as which nick; under it,
   its channels and private conversations, each with how many messages came while the user was
-  not looking at it, whether one of them named the user, and a channel's people and topic.  The
-  counts are those of ERC's track module (~erc-track-mode~), and include joins and parts.
+  not looking at it, whether someone named the user in one of them, and a channel's people and
+  topic.  The counts are those of ERC's track module (~erc-track-mode~), and include joins and
+  parts.
 
 * Reading them
 
@@ -158,12 +159,26 @@ ALL includes; and :text, as ERC shows it, without its timestamp."
           (plist-get message :text)))
 
 (defun lispm-irc--unread (buffer)
-  "How many messages came in BUFFER while the user was not looking, and
-whether one named them, as ERC's track module counts: (COUNT . NAMED)."
-  (pcase (assq buffer (bound-and-true-p erc-modified-channels-alist))
-    (`(,_ ,count . ,faces)
-     (cons count (and (or (memq 'erc-current-nick-face (ensure-list faces)) (erc-query-buffer-p buffer)) t)))
-    (_ '(0 . nil))))
+  "How many messages came in BUFFER while the user was not looking, as
+ERC's track module counts them, and whether someone named the user in
+one, as everyone does in a private conversation: (COUNT . NAMED).
+Named is read from the messages, which ERC's versions track alike, not
+from the faces the module keeps, which they choose differently."
+  (let ((count (or (cadr (assq buffer (bound-and-true-p erc-modified-channels-alist))) 0)))
+    (cons count
+          (and (> count 0)
+               (or (erc-query-buffer-p buffer)
+                   (let ((nick (with-current-buffer buffer (erc-current-nick)))
+                         (case-fold-search t))
+                     (and nick
+                          (seq-some (lambda (message)
+                                      (let ((speaker (plist-get message :speaker)))
+                                        (and speaker
+                                             (not (with-current-buffer buffer (erc-current-nick-p speaker)))
+                                             (string-match-p (concat "\\b" (regexp-quote nick) "\\b")
+                                                             (plist-get message :text)))))
+                                    (last (lispm-irc-messages buffer t) count)))))
+               t))))
 
 (defun lispm-irc--topic (buffer)
   "The topic of the channel of BUFFER, without who set it or IRC's formatting, or nil."
