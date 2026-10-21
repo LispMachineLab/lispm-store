@@ -80,7 +80,7 @@
    :description "Checks what agents are given to run, the MCP servers and skills of LispM, Claude Code and Codex: their settings and text against rules, skills' code read as Lisp, servers' tools pinned, packages looked up in OSV."
    :icon "security"
    :package (lispm-security :url "https://github.com/LispMachineLab/lispm-security"
-                            :rev "40fae61c0001c7af040c8c7bde644e40b3b72664")
+                            :rev "215b7c807c956d331b62c1c325fe00167f0b7648")
    :command lispm-security)
 
   ;; Games, built into Emacs.
