@@ -64,7 +64,9 @@ its own menus in the menu bar while it is in front.
   SHA, given in full (40 characters).
 
 The command must exist as soon as the package is installed, in a new Emacs: one the package
-autoloads.
+autoloads.  A ~:feature~ is a library the package provides, loading beside LispM Desktop's own,
+as [[https://github.com/LispMachineLab/lispm-stickies][lispm-stickies]]: loaded, it makes the app with ~lispm-desktop-define-app~ and the item's ID
+for its key; unloaded, as when the App Store removes the app, it takes it away again.
 
 The icons are pixel art in the Platinum style of [[https://github.com/LispMachineLab/lispm-desktop/tree/main/icons/os9][LispM Desktop's own]]: an SVG of one ~rect~ per
 run of pixels of one colour on a row, ~shape-rendering="crispEdges"~, in the colours of Mac OS 9.
