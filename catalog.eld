@@ -103,7 +103,7 @@
    :description "The vaults of 1Password through op, its command-line tool: items searched as you type, usernames, passwords and one-time codes copied and cleared from the clipboard after 90 seconds, new logins with generated passwords. Secrets are read only when used, never kept nor written to disk."
    :icon "1password"
    :package (lispm-1password :url "https://github.com/LispMachineLab/lispm-1password"
-                             :rev "13ae7a8b4af10c03e527eded6d29deea71c5c28d")
+                             :rev "a72c2f1b595c3035990cb60d0e35b8c450987973")
    :command lispm-1password
    :needs ((program "op" :for "reading your vaults" :cask "1password-cli")))
 
