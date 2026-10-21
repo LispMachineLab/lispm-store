@@ -614,5 +614,104 @@ sends to them, against a fake Slack."
       (should-error (lispm-store-test--call-async "slack_send" "#random" "Hi" nil nil))
       (should-not (seq-some (lambda (call) (string-match-p "join" (car call))) asked)))))
 
+(defconst lispm-store-test--telegram-messages
+  '((:@type "message" :id 3145728 :chat_id -200 :date 1792578870
+     :sender_id (:@type "messageSenderUser" :user_id 12)
+     :reply_to (:@type "messageReplyToMessage" :chat_id -200 :message_id 2097152)
+     :content (:@type "messageText" :text (:@type "formattedText" :text "Lunch at noon?" :entities [])))
+    (:@type "message" :id 2097152 :chat_id -200 :date 1792578860
+     :sender_id (:@type "messageSenderUser" :user_id 11)
+     :content (:@type "messagePhoto" :photo (:@type "photo" :sizes [])
+               :caption (:@type "formattedText" :text "The build is green" :entities [])))
+    (:@type "message" :id 1048576 :chat_id -200 :date 1792578850
+     :sender_id (:@type "messageSenderUser" :user_id 12)
+     :content (:@type "messageText" :text (:@type "formattedText" :text "Morning, all" :entities []))))
+  "The messages of the fake Telegram's group, newest first.")
+
+(defun lispm-store-test--telegram-answer (request)
+  "What a fake TDLib answers to REQUEST, a plist."
+  (pcase (plist-get request :@type)
+    ("getUser"
+     (pcase (plist-get request :user_id)
+       (11 (list :@type "user" :id 11 :first_name "Ada" :last_name "Lovelace" :type '(:@type "userTypeRegular")))
+       (12 (list :@type "user" :id 12 :first_name "Bob" :last_name "" :type '(:@type "userTypeRegular")))))
+    ("getChatHistory"
+     ;; The messages before the one given, or from the last; two at a
+     ;; time, as TDLib gives fewer than asked when they are not local.
+     (let* ((from (plist-get request :from_message_id))
+            (messages (seq-drop-while (lambda (message) (and (> from 0) (>= (plist-get message :id) from)))
+                                      (if (equal (plist-get request :chat_id) -200) lispm-store-test--telegram-messages))))
+       (list :@type "messages" :total_count (length messages)
+             :messages (vconcat (copy-tree (seq-take messages (min 2 (plist-get request :limit))))))))
+    ("searchMessages"
+     (list :@type "foundMessages" :total_count 1
+           :messages (vconcat (copy-tree (seq-take lispm-store-test--telegram-messages 1)))))
+    ("searchChatMessages"
+     (list :@type "foundChatMessages" :total_count 0 :messages []))
+    ("sendMessage"
+     (list :@type "message" :id 4194304 :chat_id (plist-get request :chat_id)))))
+
+(ert-deftest lispm-store-test-chat-telegram ()
+  "The Telegram skill lists Telega's chats, reads, searches and sends to
+them, against a fake telega-server."
+  (lispm-store-test--load-skills)
+  (let ((telega--chats (make-hash-table :test #'eq))
+        (telega--info (mapcar (lambda (type) (cons type (make-hash-table :test #'eq)))
+                              '(user secretChat basicGroup supergroup)))
+        (telega--me-id 10)
+        (telega--auth-state "Ready")
+        asked)
+    (dolist (chat `((:@type "chat" :id 101 :title "Ada Lovelace" :type (:@type "chatTypePrivate" :user_id 11)
+                     :positions [(:@type "chatPosition" :list (:@type "chatListMain") :order "300")]
+                     :unread_count 2 :unread_mention_count 0)
+                    (:@type "chat" :id -200 :title "Lisp Hackers"
+                     :type (:@type "chatTypeSupergroup" :supergroup_id 20)
+                     :positions [(:@type "chatPosition" :list (:@type "chatListMain") :order "500")]
+                     :unread_count 5 :unread_mention_count 1)
+                    (:@type "chat" :id -300 :title "Old News"
+                     :type (:@type "chatTypeSupergroup" :supergroup_id 30 :is_channel t)
+                     :positions [(:@type "chatPosition" :list (:@type "chatListArchive") :order "100")]
+                     :unread_count 0 :unread_mention_count 0)))
+      (puthash (plist-get chat :id) (copy-tree chat t) telega--chats))
+    (cl-letf (((symbol-function 'telega-server-live-p) #'always)
+              ((symbol-function 'telega-server--call)
+               (lambda (request &optional callback _command)
+                 (push request asked)
+                 (let ((answer (lispm-store-test--telegram-answer request)))
+                   (if callback (funcall callback answer) answer)))))
+      (should (equal (lispm-store-test--call "telegram_chats" nil)
+                     (concat "Lisp Hackers (group, id -200): 5 unread, 1 mentioning the user\n"
+                             "Ada Lovelace (private, id 101): 2 unread")))
+      (should (string-match-p "\\`Lisp Hackers .*\nAda Lovelace .*\\'" (lispm-store-test--call "telegram_chats" t)))
+      ;; Oldest first, asking TDLib until there are enough.
+      (let ((read (lispm-store-test--call "telegram_read" "lisp hackers" nil nil)))
+        (should (string-match-p "\\`Lisp Hackers (group, id -200):\n1048576  [-0-9]+ [:0-9]+  Bob: Morning, all\n" read))
+        (should (string-match-p "^2097152  .*  Ada Lovelace: \\[photo\\] The build is green$" read))
+        (should (string-match-p "^3145728  .*  Bob: Lunch at noon\\? \\[replying to 2097152\\]\\'" read)))
+      (let ((read (lispm-store-test--call "telegram_read" "-200" 1 3145728)))
+        (should (string-match-p "\n2097152  .*The build is green\n\n\\[earlier messages: read on with before 2097152\\]\\'"
+                                read))
+        (should-not (string-match-p "Lunch" read)))
+      (should-error (lispm-store-test--call "telegram_read" "Old Times" nil nil))
+      (should (string-match-p "\\`Lisp Hackers  3145728  .*  Bob: Lunch at noon\\?"
+                              (lispm-store-test--call "telegram_search" "lunch" nil nil)))
+      (should (string-match-p "\\`No message in Ada Lovelace matches \"lunch\""
+                              (lispm-store-test--call "telegram_search" "lunch" "Ada Lovelace" nil)))
+      ;; Sending asks the user every time.
+      (let ((tool (lispm-get-tool "telegram_send")))
+        (should (eq (lispm-tool-permission tool) 'chat))
+        (should (lispm-tool-always-ask tool))
+        (should (equal (lispm-tool-preview-text tool '((chat . "Lisp Hackers") (text . "On my way") (reply_to . 3145728)))
+                       "To Lisp Hackers (group, id -200), replying to 3145728:\n\nOn my way")))
+      (should (equal (lispm-store-test--call "telegram_send" "Lisp Hackers" "On my way" 3145728)
+                     "Sent to Lisp Hackers, replying to 3145728."))
+      (let ((sent (seq-find (lambda (request) (equal (plist-get request :@type) "sendMessage")) asked)))
+        (should (equal (plist-get sent :chat_id) -200))
+        (should (equal (plist-get (plist-get sent :reply_to) :message_id) 3145728))
+        (should (equal (plist-get (plist-get (plist-get sent :input_message_content) :text) :text) "On my way")))
+      (should-error (lispm-store-test--call "telegram_send" "Lisp Hackers" "  " nil))
+      (let ((telega--auth-state "WaitPhoneNumber"))
+        (should-error (lispm-store-test--call "telegram_chats" nil))))))
+
 (provide 'lispm-store-test)
 ;;; lispm-store-test.el ends here

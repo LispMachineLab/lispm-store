@@ -329,4 +329,11 @@
    :name "Chat on Slack"
    :description "Lets agents list your Slack conversations with what is unread, read their messages and threads, search with Slack's search, and send a message once you approve it."
    :file "skills/chat-slack.org"
-   :requires (slack))))
+   :requires (slack))
+
+  (chat-telegram
+   :kind skill
+   :name "Chat on Telegram"
+   :description "Lets agents list your Telegram chats in Telega with what is unread, read their messages, search with Telegram's search, and send a message once you approve it."
+   :file "skills/chat-telegram.org"
+   :requires (telega))))
