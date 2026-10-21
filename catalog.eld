@@ -244,4 +244,11 @@
    :name "Play music"
    :description "Lets agents find, play, pause and skip music with EMMS, and say what is playing."
    :file "skills/music.org"
-   :requires (emms))))
+   :requires (emms))
+
+  (check-security
+   :kind skill
+   :name "Check security"
+   :description "Lets agents scan what they are given to run, read Security's findings and explain them; only you trust a server or set a finding aside."
+   :file "skills/check-security.org"
+   :requires (security))))
