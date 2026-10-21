@@ -162,10 +162,16 @@ in a new Emacs, which loads it rather than the built-in one."
 
 ;;;; Apps, extensions and roles
 
+(defun lispm-store-test--desktop ()
+  "Return LispM Desktop's lisp/, which must be on the load path."
+  (file-name-directory (or (locate-library "lispm-desktop-ai")
+                           (error "LispM Desktop's lisp/ is not on the load path"))))
+
 (ert-deftest lispm-store-test-apps-open ()
-  "Each app's command is a command once its package is installed.
-In a new Emacs, as after a restart: installing compiles a package,
-which loads more of it than its autoloads."
+  "Each app's command is a command once its package is installed, and an
+app that makes itself loads beside LispM Desktop and provides its
+feature.  In a new Emacs, as after a restart: installing compiles a
+package, which loads more of it than its autoloads."
   (lispm-store-test--install)
   (pcase-dolist (`(,id . ,item) (lispm-store-test--of-kind 'app))
     (let ((command (plist-get item :command))
@@ -173,7 +179,8 @@ which loads more of it than its autoloads."
       (should (equal (list id (lispm-store-test--emacs
                                (if command
                                    `(commandp ',command)
-                                 `(featurep (require ',feature nil t)))))
+                                 `(progn (add-to-list 'load-path ,(lispm-store-test--desktop))
+                                         (featurep (require ',feature))))))
                      (list id t))))))
 
 (ert-deftest lispm-store-test-extensions-load ()
@@ -181,8 +188,7 @@ which loads more of it than its autoloads."
 provides its feature.  In a new Emacs, with LispM Desktop's lisp/ on its
 load path, as it is in LispM Desktop."
   (lispm-store-test--install)
-  (let ((desktop (file-name-directory (or (locate-library "lispm-desktop-ai")
-                                          (error "LispM Desktop's lisp/ is not on the load path")))))
+  (let ((desktop (lispm-store-test--desktop)))
     (pcase-dolist (`(,id . ,item) (lispm-store-test--of-kind 'extension))
       (let ((feature (plist-get item :feature)))
         (should (equal (list id (lispm-store-test--emacs
