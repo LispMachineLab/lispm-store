@@ -39,7 +39,7 @@
 
 (defconst lispm-store-check-keys
   '((app :required (:kind :name :subtitle :category :description :icon)
-         :optional (:package :command :feature :requires))
+         :optional (:package :command :feature :programs :requires))
     (extension :required (:kind :name :subtitle :description :icon :package :feature)
                :optional (:program :install :requires))
     (role :required (:kind :name :description :file) :optional (:requires))
@@ -197,7 +197,31 @@
     (unless (memq (plist-get item :category) lispm-store-check-categories)
       (lispm-store-check--problem "%s: :category is one of %s" id
                                   (mapconcat #'symbol-name lispm-store-check-categories ", ")))
+    (when (plist-member item :programs)
+      (lispm-store-check--programs id (plist-get item :programs)))
     (lispm-store-check--icons id icon)))
+
+(defun lispm-store-check--programs (id programs)
+  "Check the :programs of the app ID: each (NAME :for WHAT :install COMMAND
+:instead STAND-INS :more WHAT-MORE), NAME a program's name, :for given."
+  (if (not (proper-list-p programs))
+      (lispm-store-check--problem "%s: :programs is a list of (NAME :for WHAT ...)" id)
+    (dolist (program programs)
+      (let ((name (car-safe program))
+            (properties (cdr-safe program)))
+        (cond ((not (lispm-store-check--line-p name))
+               (lispm-store-check--problem "%s: a program of :programs is (NAME :for WHAT ...), NAME a string" id))
+              ((lispm-store-check--plist-p properties (format "%s: %s" id name))
+               (cl-loop for (key) on properties by #'cddr
+                        unless (memq key '(:for :install :instead :more))
+                        do (lispm-store-check--problem "%s: %s: %s is not a property of a program" id name key))
+               (dolist (key '(:for :install :more))
+                 (when (or (eq key :for) (plist-member properties key))
+                   (unless (lispm-store-check--line-p (plist-get properties key))
+                     (lispm-store-check--problem "%s: %s: %s is a string of one line" id name key))))
+               (let ((instead (plist-get properties :instead)))
+                 (unless (and (proper-list-p instead) (seq-every-p #'lispm-store-check--line-p instead))
+                   (lispm-store-check--problem "%s: %s: :instead is a list of programs' names" id name)))))))))
 
 (defun lispm-store-check--subtitle (id subtitle)
   "Check the SUBTITLE of the item ID: a few words on one line."

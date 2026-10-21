@@ -53,6 +53,7 @@ its own menus in the menu bar while it is in front.
 | ~:package~  | how to install it, as below; absent for a part of Emacs                                 |
 | ~:command~  | the command that opens it, a symbol                                                     |
 | ~:feature~  | instead of ~:command~: a library that, once loaded, adds the app to the desktop itself |
+| ~:programs~ | optional: the programs it uses beyond Emacs, as below                                   |
 
 ~:package~ is one of:
 
@@ -67,6 +68,21 @@ The command must exist as soon as the package is installed, in a new Emacs: one 
 autoloads.  A ~:feature~ is a library the package provides, loading beside LispM Desktop's own,
 as [[https://github.com/LispMachineLab/lispm-stickies][lispm-stickies]]: loaded, it makes the app with ~lispm-desktop-define-app~ and the item's ID
 for its key; unloaded, as when the App Store removes the app, it takes it away again.
+
+~:programs~ lists the programs an app uses beyond Emacs, each ~(NAME :for WHAT :install COMMAND
+:instead STAND-INS :more WHAT-MORE)~: NAME the program on ~PATH~, WHAT what the app uses it for,
+COMMAND how to install it, STAND-INS programs doing its work when it is missing, as macOS's own
+~afplay~ plays music where ~mpv~ is not installed, and WHAT-MORE what it does that they do not.
+A program missing does not keep an app from being installed: the App Store's information says
+it is missing and copies COMMAND, and the app's window says so as it opens, unless a stand-in is
+installed, and offers COMMAND in its Help menu.
+
+#+begin_src lisp-data
+(emms
+ ...
+ :programs (("mpv" :for "playing music" :instead ("afplay") :more "seeking and radio streams"
+             :install "brew install mpv")))
+#+end_src
 
 The icons are pixel art in the Platinum style of [[https://github.com/LispMachineLab/lispm-desktop/tree/main/icons/os9][LispM Desktop's own]]: an SVG of one ~rect~ per
 run of pixels of one colour on a row, ~shape-rendering="crispEdges"~, in the colours of Mac OS 9.
