@@ -119,6 +119,22 @@
    :command slack-start
    :needs ((program "curl" :for "talking to Slack and fetching its files" :brew "curl")))
 
+  (telega
+   :kind app
+   :name "Telega"
+   :subtitle "Telegram"
+   :category social
+   :description "Telega, a Telegram client: your chats, groups and channels, with photos, stickers and voice notes, through telega-server, which it builds once from TDLib, Telegram's library."
+   :icon "telega"
+   ;; Its tags stopped at 0.8.03; a commit of master that was read.
+   :package (telega :url "https://github.com/zevlg/telega.el"
+                    :rev "382276c2443f644a981f67f1f2340115696453e2")
+   :command telega
+   ;; Homebrew's release of TDLib, 1.8.0, is older than the 1.8.66 Telega needs.
+   :needs ((library "TDLib" :for "talking to Telegram, through telega-server" :brew "tdlib" :head t
+                    :file "include/td/telegram/td_json_client.h")
+           (program "cc" :for "building telega-server, once" :xcode t)))
+
   ;; Games, built into Emacs.
 
   (tetris
