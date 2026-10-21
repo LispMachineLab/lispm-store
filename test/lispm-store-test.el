@@ -509,5 +509,110 @@ to them, against a fake IRC server."
         (mapc #'kill-buffer (erc-buffer-list)))
       (delete-process server))))
 
+(defun lispm-store-test--slack-answer (url params)
+  "What a fake Slack answers to a request to URL with PARAMS, an alist."
+  (let ((channel (alist-get "channel" params nil nil #'equal)))
+    (pcase url
+      ("https://slack.com/api/conversations.history"
+       (if (equal channel "C1")
+           (let ((all '((:type "message" :user "U2" :text "Lunch at noon?" :ts "1792578870.000300")
+                        (:type "message" :user "U1" :text "<@U0> the build is green" :ts "1792578860.000200"
+                         :thread_ts "1792578860.000200" :reply_count 2
+                         :files ((:id "F1" :name "build.log" :title "build.log")))
+                        (:type "message" :user "U2" :text "Morning, all" :ts "1792578850.000100")))
+                 (latest (alist-get "latest" params nil nil #'equal))
+                 (limit (string-to-number (alist-get "limit" params "100" nil #'equal))))
+             (let* ((older (seq-filter (lambda (message) (or (null latest) (string-lessp (plist-get message :ts) latest)))
+                                       all))
+                    (page (seq-take older limit)))
+               (list :ok t :messages (copy-tree page) :has_more (if (< (length page) (length older)) t :json-false))))
+         (list :ok :json-false :error "channel_not_found")))
+      ("https://slack.com/api/conversations.replies"
+       (list :ok t :has_more :json-false
+             :messages (copy-tree '((:type "message" :user "U1" :text "<@U0> the build is green" :ts "1792578860.000200"
+                                     :thread_ts "1792578860.000200" :reply_count 2)
+                                    (:type "message" :user "U2" :text "Ship it" :ts "1792578861.000100"
+                                     :thread_ts "1792578860.000200")
+                                    (:type "message" :user "U0" :text "Shipping" :ts "1792578862.000100"
+                                     :thread_ts "1792578860.000200")))))
+      ("https://slack.com/api/search.messages"
+       (list :ok t :messages (list :total 1
+                                   :matches (copy-tree '((:channel (:id "C1" :name "general") :user "U2" :username "bob"
+                                                          :ts "1792578870.000300" :text "Lunch at noon?"))))))
+      ("https://slack.com/api/chat.postMessage" (list :ok t))
+      (_ (list :ok :json-false :error (format "unexpected %s" url))))))
+
+(ert-deftest lispm-store-test-chat-slack ()
+  "The Slack skill lists emacs-slack's conversations, reads, searches and
+sends to them, against a fake Slack."
+  (lispm-store-test--load-skills)
+  (let ((slack-teams-by-token (make-hash-table :test 'equal))
+        (team (slack-create-team (list :id "T1" :name "Lab" :token "xoxp-test" :self-id "U0")))
+        asked)
+    (puthash "xoxp-test" team slack-teams-by-token)
+    (slack-team-set-users team (copy-tree '((:id "U0" :name "me" :profile (:display_name_normalized "me"))
+                                            (:id "U1" :name "alice" :profile (:display_name_normalized "alice"))
+                                            (:id "U2" :name "bob" :profile (:display_name_normalized "bob")))))
+    (dolist (payload '((:id "C1" :name "general" :is_channel t :is_member t :topic (:value "Builds and lunch"))
+                       (:id "C2" :name "random" :is_channel t :is_member :json-false)))
+      (puthash (plist-get payload :id) (slack-room-create (copy-tree payload) 'slack-channel) (oref team channels)))
+    (puthash "D1" (slack-room-create (list :id "D1" :user "U1" :is_im t) 'slack-im) (oref team ims))
+    (oset team counts (slack-create-counts
+                       (copy-tree '(:threads (:has_unreads :json-false :mention_count 0)
+                                    :channels ((:id "C1" :has_unreads t :mention_count 1 :latest "1792578870.000300")
+                                               (:id "C2" :has_unreads t :mention_count 0 :latest "1792578000.000100"))
+                                    :mpims ()
+                                    :ims ((:id "D1" :has_unreads :json-false :mention_count 0
+                                           :latest "1792578000.000100"))))))
+    (cl-letf (((symbol-function 'slack-request)
+               (lambda (request &rest _)
+                 (let ((params (or (oref request params)
+                                   (json-parse-string (oref request data) :object-type 'alist :array-type 'list))))
+                   (push (cons (oref request url) params) asked)
+                   (run-at-time 0 nil (oref request success)
+                                :data (lispm-store-test--slack-answer
+                                       (oref request url)
+                                       (mapcar (lambda (entry) (cons (format "%s" (car entry)) (cdr entry))) params))))
+                 request)))
+      (let ((list (lispm-store-test--call "slack_conversations" nil)))
+        (should (string-match-p "\\`Lab: not connected\n  #general: unread, 1 mentioning the user; topic: Builds and lunch\n  alice (direct)\\'"
+                                list)))
+      (should (string-match-p "\\`Lab: not connected\n  #general: unread" (lispm-store-test--call "slack_conversations" t)))
+      ;; Oldest first, with what is attached and replied.
+      (let ((read (lispm-store-test--call-async "slack_read" "#general" nil nil nil nil)))
+        (should (string-match-p "\\`#general in Lab:\n1792578850\\.000100  [-0-9]+ [:0-9]+  bob: Morning, all\n" read))
+        (should (string-match-p "^1792578860\\.000200  .*  alice: @me the build is green \\[files: build\\.log\\] \\[2 replies: read them with thread 1792578860\\.000200\\]$"
+                                read))
+        (should (string-match-p "bob: Lunch at noon\\?\\'" read)))
+      (let ((read (lispm-store-test--call-async "slack_read" "general" "Lab" 1 "1792578870.000300" nil)))
+        (should (string-match-p "alice: @me the build is green.*\n\n\\[earlier messages: read on with before 1792578860\\.000200\\]\\'"
+                                read))
+        (should-not (string-match-p "Lunch" read)))
+      (let ((read (lispm-store-test--call-async "slack_read" "#general" nil nil nil "1792578860.000200")))
+        (should (string-match-p "\\`#general in Lab, the thread of 1792578860\\.000200:\n" read))
+        (should (string-match-p "bob: Ship it\n.*me: Shipping\\'" read))
+        (should-not (string-match-p "replies" read)))
+      (should-error (lispm-store-test--call-async "slack_read" "#nowhere" nil nil nil nil))
+      (should (string-match-p "\\`#general  1792578870\\.000300  .*  bob: Lunch at noon\\?\\'"
+                              (lispm-store-test--call-async "slack_search" "lunch in:#general" nil nil)))
+      (should (equal (alist-get "query" (alist-get "https://slack.com/api/search.messages" asked nil nil #'equal)
+                                nil nil #'equal)
+                     "lunch in:#general"))
+      ;; Sending asks the user every time, and never joins a channel.
+      (let ((tool (lispm-get-tool "slack_send")))
+        (should (eq (lispm-tool-permission tool) 'chat))
+        (should (lispm-tool-always-ask tool))
+        (should (equal (lispm-tool-preview-text tool '((conversation . "#general") (text . "On my way")))
+                       "To #general in Lab:\n\nOn my way")))
+      (should (equal (lispm-store-test--call-async "slack_send" "#general" "On my way" nil "1792578870.000300")
+                     "Sent to #general in Lab, in the thread of 1792578870.000300."))
+      (let ((posted (alist-get "https://slack.com/api/chat.postMessage" asked nil nil #'equal)))
+        (should (equal (alist-get 'channel posted) "C1"))
+        (should (equal (alist-get 'thread_ts posted) "1792578870.000300")))
+      (should (equal (lispm-store-test--call-async "slack_send" "alice" "Thanks!" nil nil)
+                     "Sent to alice in Lab."))
+      (should-error (lispm-store-test--call-async "slack_send" "#random" "Hi" nil nil))
+      (should-not (seq-some (lambda (call) (string-match-p "join" (car call))) asked)))))
+
 (provide 'lispm-store-test)
 ;;; lispm-store-test.el ends here
