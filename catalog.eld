@@ -57,7 +57,7 @@
    :description "Mac OS 9's Stickies: notes in seven colours over the desktop, rolled up into their title bars, kept as headings of one org file that agents read too."
    :icon "stickies"
    :package (lispm-stickies :url "https://github.com/LispMachineLab/lispm-stickies"
-                            :rev "152ba4d18865b94b339d36fe6268299fa4d542f2")
+                            :rev "822cc3fbcd5eeaca4c61a1cb058a48c6eacc38ca")
    :feature lispm-stickies)
 
   ;; Games, built into Emacs.
