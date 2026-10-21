@@ -365,5 +365,149 @@ in OSV only when the user lets it."
         (should (string-match-p "\\`Not looked up: looking up is turned off"
                                 (lispm-store-test--call-async "security_look_up")))))))
 
+;;;; Chat
+
+(defun lispm-store-test--wait (predicate &optional seconds)
+  "Wait until PREDICATE returns non-nil, at most SECONDS (default 20); its value."
+  (let ((deadline (+ (float-time) (or seconds 20))) value)
+    (while (and (not (setq value (funcall predicate))) (< (float-time) deadline))
+      (accept-process-output nil 0.05))
+    value))
+
+(defvar lispm-store-test--irc-client nil
+  "The fake IRC server's connection with ERC.")
+
+(defvar lispm-store-test--irc-heard nil
+  "The lines the fake IRC server heard from ERC, newest first.")
+
+(defun lispm-store-test--irc-say (format &rest args)
+  "Send ERC a line from the fake IRC server, made as by `format' of FORMAT and ARGS."
+  (process-send-string lispm-store-test--irc-client (concat (apply #'format format args) "\r\n")))
+
+(defun lispm-store-test--irc-answer (line)
+  "Answer LINE, which ERC sent, as far as an IRC server must to chat."
+  (push line lispm-store-test--irc-heard)
+  (let ((nick (process-get lispm-store-test--irc-client :nick)))
+    (pcase (split-string line " ")
+      (`("NICK" ,nick . ,_) (process-put lispm-store-test--irc-client :nick nick))
+      (`("USER" . ,_)
+       (dolist (reply '("001 %s :Welcome to TestNet" "002 %s :Your host is irc.test" "003 %s :Created today"
+                        "004 %s irc.test test-1 iow nt"
+                        "005 %s NETWORK=TestNet CHANTYPES=# PREFIX=(ov)@+ CASEMAPPING=ascii :are supported"
+                        "376 %s :End of MOTD"))
+         (lispm-store-test--irc-say ":irc.test %s" (format reply nick))))
+      (`("JOIN" ,channel . ,_)
+       (lispm-store-test--irc-say ":%s!user@lispm.test JOIN %s" nick channel)
+       (lispm-store-test--irc-say ":irc.test 332 %s %s :Lisp machines, then and now" nick channel)
+       (lispm-store-test--irc-say ":irc.test 353 %s = %s :%s alice @bob" nick channel nick)
+       (lispm-store-test--irc-say ":irc.test 366 %s %s :End of NAMES list" nick channel))
+      (`("PING" . ,token) (lispm-store-test--irc-say ":irc.test PONG irc.test %s" (string-join token " "))))))
+
+(defun lispm-store-test--irc-server ()
+  "Start a fake IRC server on 127.0.0.1 for one client; return its process."
+  (setq lispm-store-test--irc-heard nil)
+  (make-network-process
+   :name "lispm-store-test-irc" :server t :host "127.0.0.1" :service t :family 'ipv4
+   :coding 'utf-8-unix :sentinel #'ignore
+   :filter (lambda (process string)
+             (setq lispm-store-test--irc-client process)
+             (let ((pending (concat (process-get process :pending) string)))
+               (while (string-match "\r?\n" pending)
+                 (let ((line (substring pending 0 (match-beginning 0))))
+                   (setq pending (substring pending (match-end 0)))
+                   (lispm-store-test--irc-answer line)))
+               (process-put process :pending pending)))))
+
+(ert-deftest lispm-store-test-chat-irc ()
+  "The IRC skill lists, reads and searches ERC's conversations, and sends
+to them, against a fake IRC server."
+  (lispm-store-test--load-skills)
+  (let* ((server (lispm-store-test--irc-server))
+         ;; Nothing shown, asked or looked up: the user's passwords
+         ;; are not read.
+         (erc-buffer-display 'bury)
+         (erc-interactive-display 'bury)
+         (erc-receive-query-display 'bury)
+         (erc-auth-source-server-function nil)
+         (erc-auth-source-join-function nil)
+         (erc-server-auto-reconnect nil)
+         (erc-server-flood-penalty 0.1)
+         (heard (lambda (line) (lispm-store-test--wait (lambda () (member line lispm-store-test--irc-heard))))))
+    (unwind-protect
+        (progn
+          (should (string-match-p "\\`ERC is on no network" (lispm-store-test--call "irc_conversations")))
+          (erc :server "127.0.0.1" :port (process-contact server :service) :nick "lispm" :full-name "LispM")
+          (should (lispm-store-test--wait (lambda () (and (get-buffer "TestNet")
+                                                          (buffer-local-value 'erc-server-connected
+                                                                              (get-buffer "TestNet"))))))
+          (with-current-buffer "TestNet"
+            (erc-cmd-JOIN "#lisp")
+            (erc-cmd-JOIN "#emacs"))
+          (should (lispm-store-test--wait (lambda () (and (get-buffer "#lisp") (get-buffer "#emacs")
+                                                          (with-current-buffer "#lisp" erc-channel-topic)
+                                                          (with-current-buffer "#emacs" erc-channel-topic)))))
+          (lispm-store-test--irc-say ":bob!b@example.org PRIVMSG #emacs :lispmachines, anyone?")
+          (lispm-store-test--irc-say ":alice!a@example.org PRIVMSG #lisp :lispm: have you tried the agents?")
+          (lispm-store-test--irc-say ":bob!b@example.org PRIVMSG #lisp :\1ACTION waves\1")
+          (lispm-store-test--irc-say ":carol!c@example.org JOIN #lisp")
+          (lispm-store-test--irc-say ":alice!a@example.org PRIVMSG lispm :a word in private")
+          (should (lispm-store-test--wait (lambda () (get-buffer "alice"))))
+          (let ((list (lispm-store-test--call "irc_conversations")))
+            (should (string-match-p "\\`TestNet: connected as lispm\n" list))
+            (should (string-match-p "^  #lisp: [0-9]+ unread, naming the user; 4 people; topic: Lisp machines, then and now$"
+                                    list))
+            (should (string-match-p "^  #emacs: [0-9]+ unread; 3 people; topic: " list))
+            (should (string-match-p "^  alice (private): 1 unread, naming the user$" list)))
+          ;; What people said; and with all, the rest.
+          (let ((read (lispm-store-test--call "irc_read" "#lisp" nil nil nil)))
+            (should (string-match-p "\\`#lisp on TestNet, messages [0-9]+ to [0-9]+:\n" read))
+            (should (string-match-p "^[0-9]+\\. [-0-9]+ [:0-9]+ <alice> lispm: have you tried the agents\\?\n[0-9]+\\. .* \\* bob waves\\'"
+                                    read))
+            (should-not (string-match-p "carol" read)))
+          (let ((read (lispm-store-test--call "irc_read" "#lisp" nil nil t)))
+            (should (string-match-p "carol .*has joined channel #lisp" read))
+            (should (string-match-p "Topic for #lisp: Lisp machines" read)))
+          (let* ((last (lispm-store-test--call "irc_read" "#lisp" 1 nil nil))
+                 (before (and (string-match "read on with before \\([0-9]+\\)\\]\\'" last)
+                              (string-to-number (match-string 1 last)))))
+            (should (string-match-p "\n[0-9]+\\. .*\\* bob waves\n" last))
+            (should before)
+            (should (string-match-p "<alice> lispm: have you tried\\(?:.\\|\n\\)*\\'"
+                                    (lispm-store-test--call "irc_read" "#lisp" 1 before nil))))
+          (should (string-match-p "<alice> a word in private" (lispm-store-test--call "irc_read" "alice" nil nil nil)))
+          (should (string-match-p "\\`TestNet, the network TestNet's own buffer, .*\n\\(?:.\\|\n\\)*End of MOTD"
+                                  (lispm-store-test--call "irc_read" "TestNet" nil nil t)))
+          (should-error (lispm-store-test--call "irc_read" "#nowhere" nil nil nil))
+          ;; Newest first, in every conversation or in one.
+          (let ((found (lispm-store-test--call "irc_search" "LISPM\\|private" nil nil)))
+            (should (string-match-p "\\`alice [0-9]+\\. .*<alice> a word in private\n#lisp [0-9]+\\. .*<alice> lispm: have"
+                                    found)))
+          (should-not (string-match-p "private" (lispm-store-test--call "irc_search" "private\\|agents" "#lisp" nil)))
+          (should (string-match-p "\\`Nothing said" (lispm-store-test--call "irc_search" "emacs" "#lisp" nil)))
+          ;; Sending asks the user every time, and sends lines as text.
+          (let ((tool (lispm-get-tool "irc_send")))
+            (should (eq (lispm-tool-permission tool) 'chat))
+            (should (lispm-tool-always-ask tool))
+            (should (equal (lispm-tool-preview-text tool '((conversation . "#lisp") (text . "Hello\n\nthere")))
+                           "To #lisp on TestNet:\n\nHello\nthere")))
+          (should (equal (lispm-store-test--call "irc_send" "#lisp" "Yes, they read along.\n/quit" nil)
+                         "Sent 2 messages to #lisp on TestNet."))
+          (should (funcall heard "PRIVMSG #lisp :Yes, they read along."))
+          (should (funcall heard "PRIVMSG #lisp :/quit"))
+          (should (lispm-store-test--wait
+                   (lambda () (string-match-p "<lispm> Yes, they read along\\."
+                                              (lispm-store-test--call "irc_read" "#lisp" nil nil nil)))))
+          (should (equal (lispm-store-test--call "irc_send" "dave" "Hello, Dave." nil)
+                         "Sent 1 message to dave on TestNet."))
+          (should (funcall heard "PRIVMSG dave :Hello, Dave."))
+          (should (get-buffer "dave"))
+          (should-error (lispm-store-test--call "irc_send" "#elsewhere" "Hi" nil))
+          (should-error (lispm-store-test--call "irc_send" "TestNet" "Hi" nil))
+          (should-error (lispm-store-test--call "irc_send" "#lisp" "\n \n" nil))
+          (should-not (member "JOIN #elsewhere" lispm-store-test--irc-heard)))
+      (let ((kill-buffer-query-functions nil))
+        (mapc #'kill-buffer (erc-buffer-list)))
+      (delete-process server))))
+
 (provide 'lispm-store-test)
 ;;; lispm-store-test.el ends here

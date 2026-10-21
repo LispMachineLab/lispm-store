@@ -315,4 +315,11 @@
    :name "Check security"
    :description "Lets agents scan what they are given to run, read Security's findings and explain them; only you trust a server or set a finding aside."
    :file "skills/check-security.org"
-   :requires (security))))
+   :requires (security))
+
+  (chat-irc
+   :kind skill
+   :name "Chat on IRC"
+   :description "Lets agents list your IRC conversations in ERC with what is unread, read and search what was said, and send a message once you approve it."
+   :file "skills/chat-irc.org"
+   :requires (erc))))
