@@ -31,6 +31,18 @@
    :package emms
    :command emms-browser)
 
+  (yeetube
+   :kind app
+   :name "Yeetube"
+   :subtitle "YouTube videos"
+   :category music
+   :description "YouTube searched from Emacs, the videos listed with their channels and lengths, played through mpv, downloaded with yt-dlp, and saved for later."
+   :icon "yeetube"
+   ;; Release 2.3.1, whose tag is named 0.2.3.
+   :package (yeetube :url "https://git.thanosapollo.org/yeetube"
+                     :rev "4bbb5c37b77811b69b2d4483bdb7042247c587a1")
+   :command yeetube-search)
+
   (calculator
    :kind app
    :name "Calculator"
