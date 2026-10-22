@@ -288,7 +288,7 @@
    :description "Terry Winograd's SHRDLU of 1970 talks in English about a table of blocks, pyramids and a box, and moves them with a hand, drawn as it goes. The Common Lisp port of the 1990s, run unchanged but for fixes, fetched with git on its first start."
    :icon "shrdlu"
    :package (lispm-shrdlu :url "https://github.com/LispMachineLab/lispm-shrdlu"
-                          :rev "2fef00dcac601c96530f7c400e22d29dd8252252")
+                          :rev "8e48d34a8be2049c4d65ca32cd3841f7c03c43b5")
    :command lispm-shrdlu
    :requires (emacs-cl)
    :needs ((program "git" :for "fetching SHRDLU's Common Lisp on its first start" :xcode t)))
