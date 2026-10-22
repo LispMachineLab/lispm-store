@@ -206,7 +206,8 @@
    :license "AGPL-3.0-or-later AND GPL-2.0-or-later AND BSD-3-Clause"
    ;; Release 0.1.0.
    :package (lispm-doom :url "https://github.com/LispMachineLab/lispm-doom"
-                        :rev "e64443c3878b7f59edae466346db983942cb0626")
+                        :rev "e64443c3878b7f59edae466346db983942cb0626"
+                        :lisp-dir "lisp")
    :command lispm-doom
    ;; It runs in Emacs 32, LispM's experimental install.
    :emacs 32
