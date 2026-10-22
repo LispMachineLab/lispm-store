@@ -34,6 +34,7 @@ ID is a lower-case symbol unique in the catalog.  Every item has:
 | ~:name~        | the name the store shows                                                          |
 | ~:description~ | what it is, one line                                                              |
 | ~:requires~    | optional: IDs of items to install first, such as the app a skill drives           |
+| ~:emacs~       | optional: the lowest major version of Emacs it runs in, as ~32~; older ones list it, but do not install it |
 
 ** Applications
 
