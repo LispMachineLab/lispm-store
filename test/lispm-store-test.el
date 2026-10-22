@@ -233,6 +233,41 @@ load path, as it is in LispM Desktop."
                                          (featurep (require ',feature)))))
                        (list id t)))))))
 
+(defun lispm-store-test--deftools (form)
+  "The names of the tools FORM defines with `lispm-deftool', however deep."
+  (cond ((and (eq (car-safe form) 'lispm-deftool) (symbolp (car-safe (cdr form))))
+         (list (symbol-name (cadr form))))
+        ((consp form)
+         (let (names)
+           (while (consp form)
+             (setq names (append names (lispm-store-test--deftools (pop form)))))
+           names))))
+
+(ert-deftest lispm-store-test-skills-indexed ()
+  "Agents find each skill's tools, read from its code without evaluating it:
+every tool it defines, defined where LispM Agent's index sees it."
+  (skip-unless (fboundp 'lispm-skills--index))
+  (lispm-store-test--load-skills)
+  (pcase-dolist (`(,id . ,item) (lispm-store-test--of-kind 'skill))
+    (let* ((file (plist-get item :file))
+           (org (if (string-suffix-p "/" file) (concat file "SKILL.org") file))
+           (defined (mapcan (lambda (block)
+                              (with-temp-buffer
+                                (insert (nth 1 block))
+                                (goto-char (point-min))
+                                (let (names)
+                                  (while (progn (forward-comment (buffer-size)) (not (eobp)))
+                                    (setq names (append names (lispm-store-test--deftools
+                                                               (read (current-buffer))))))
+                                  names)))
+                            (lispm-store-check--blocks (lispm-store-check--text org))))
+           (indexed (mapcar #'car (plist-get (lispm-skills--index (list :file (lispm-store-check--file org)))
+                                             :tools))))
+      (should defined)
+      (should (equal (list id indexed) (list id defined)))
+      (dolist (name indexed)
+        (should (equal (list id name (and (lispm-get-tool name) t)) (list id name t)))))))
+
 (ert-deftest lispm-store-test-role-tools ()
   "Every tool a role names is a tool of LispM or of a skill."
   (lispm-store-test--load-skills)
