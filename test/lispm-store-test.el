@@ -94,6 +94,20 @@ An error there is one here, with what that Emacs said."
 (defvar lispm-store-test--installed nil
   "Non-nil once the apps' packages are installed.")
 
+(defun lispm-store-test--in-install-order (items)
+  "Return ITEMS, (ID . PROPERTIES) each, with the items one :requires
+before it, as the App Store installs them: an app's package may require
+an extension's, such as MYCIN's Emacs Common Lisp."
+  (let (order)
+    (cl-labels ((visit (item)
+                  (unless (memq item order)
+                    (dolist (required (plist-get (cdr item) :requires))
+                      (when-let* ((other (assq required items)))
+                        (visit other)))
+                    (push item order))))
+      (mapc #'visit items))
+    (nreverse order)))
+
 (defun lispm-store-test--install ()
   "Install every app's and extension's package as LispM Desktop does, once.
 Each in an Emacs of its own, as installing loads what it compiles.
@@ -103,8 +117,9 @@ unmet, as it compares no versions (fixed in 30.2).  Then the newer
 one is installed from the archives, and the package compiled again
 in a new Emacs, which loads it rather than the built-in one."
   (unless lispm-store-test--installed
-    (pcase-dolist (`(,_id . ,item) (append (lispm-store-test--of-kind 'app)
-                                           (lispm-store-test--of-kind 'extension)))
+    (pcase-dolist (`(,_id . ,item) (lispm-store-test--in-install-order
+                                    (append (lispm-store-test--of-kind 'app)
+                                            (lispm-store-test--of-kind 'extension))))
       (pcase (plist-get item :package)
         ('nil)
         ((and (pred symbolp) name)
