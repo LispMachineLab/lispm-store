@@ -315,7 +315,7 @@ every tool it defines, defined where LispM Agent's index sees it."
   "A feed of two entries, one of them a podcast's.")
 
 (ert-deftest lispm-store-test-feeds ()
-  "The feeds skill fetches, finds, reads and tags Elfeed's entries."
+  "The feeds skill fetches, finds, reads, tags and shows Elfeed's entries."
   (lispm-store-test--load-skills)
   (let* ((feed (expand-file-name "feed.xml" lispm-store-test--work))
          (elfeed-db-directory (expand-file-name "elfeed" lispm-store-test--work))
@@ -344,6 +344,14 @@ every tool it defines, defined where LispM Agent's index sees it."
                               (lispm-store-test--call "feeds_search" "-unread" nil)))
       (should (string-match-p "\\`No entries match"
                               (lispm-store-test--call "feeds_search" "+unread lambda" nil)))
+      ;; Shown to the user in another window, narrowed; an entry opened.
+      (save-window-excursion
+        (should (equal (lispm-store-test--call "feeds_show" "+starred" nil)
+                       "Elfeed lists the 1 entries of the filter \"+starred\"."))
+        (should (get-buffer-window (elfeed-search-buffer)))
+        (should (equal (lispm-store-test--call "feeds_show" nil (car keys))
+                       "Elfeed shows the entry Lambda the ultimate."))
+        (should (get-buffer-window "*elfeed-entry*")))
       ;; Saved, and found again by a key no tool gave in this Emacs.
       (should (file-exists-p (expand-file-name "index" elfeed-db-directory)))
       (clrhash lispm-feeds--keys)

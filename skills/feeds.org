@@ -31,9 +31,12 @@ over that database, and the functions behind them for ~eval_elisp~.
 
 * Showing them to the user
 
-With ~eval_elisp~: ~(elfeed)~ opens Elfeed's list of entries, and ~(elfeed-search-set-filter
-FILTER)~ shows a filter's entries there; ~(elfeed-show-entry (lispm-feeds-entry KEY))~ opens an
-entry, and ~(browse-url (elfeed-entry-link (lispm-feeds-entry KEY)))~ its page.
+- ~feeds_show~: open Elfeed for the user, its list of entries narrowed to FILTER when given (the
+  filter feeds_search took, to show what you found), or with ENTRY, a key, that entry.  In
+  LispM Desktop it shows in Elfeed's window.
+
+With ~eval_elisp~: ~(browse-url (elfeed-entry-link (lispm-feeds-entry KEY)))~ opens an entry's
+page.
 
 * Care
 
@@ -112,6 +115,16 @@ KEY is one the tools gave, as feeds_search does."
                            (buffer-substring-no-properties (point-min) (point-max))))))
           (t (string-trim content)))))
 
+(defun lispm-feeds-show-window ()
+  "Show Elfeed's list of entries: in Elfeed's window of LispM Desktop,
+where the App Store installed it, else in another window than the
+selected one.  Return the window, or nil."
+  (if (and (fboundp 'lispm-desktop-store-open)
+           (ignore-errors (lispm-desktop-store-open 'elfeed) t))
+      (get-buffer-window (elfeed-search-buffer) t)
+    (save-window-excursion (elfeed))
+    (display-buffer (elfeed-search-buffer) '(nil (inhibit-same-window . t)))))
+
 (lispm-deftool feeds_list ()
   "List the user's feeds: each one's title, URL and number of unread entries."
   (let ((unread (make-hash-table :test #'equal)))
@@ -161,6 +174,24 @@ KEY is one the tools gave, as feeds_search does."
             (if (< end (length text))
                 (format "\n\n[... %d more characters; read on with start %d]" (- (length text) end) end)
               ""))))
+
+(lispm-deftool feeds_show
+    ((filter string "An Elfeed filter whose entries the list shows, as for feeds_search." :optional t)
+     (entry string "Instead, the key of an entry to open, as feeds_search gives it." :optional t))
+  "Show the user Elfeed: its list of entries, narrowed to FILTER, or one entry."
+  (let ((window (lispm-feeds-show-window)))
+    (if entry
+        (let ((found (lispm-feeds-entry entry)))
+          (if (window-live-p window)
+              (with-selected-window window (elfeed-show-entry found))
+            (let ((elfeed-show-entry-switch #'display-buffer))
+              (elfeed-show-entry found)))
+          (format "Elfeed shows the entry %s." (lispm-feeds--title found)))
+      (with-current-buffer (elfeed-search-buffer)
+        (when filter
+          (elfeed-search-set-filter filter))
+        (format "Elfeed lists the %d entries of the filter %S."
+                (length (elfeed-search-entries elfeed-search-filter)) elfeed-search-filter)))))
 
 (lispm-deftool feeds_tag
     ((entries array "Keys of the entries, as feeds_search gives them." :items ((type . "string")))
