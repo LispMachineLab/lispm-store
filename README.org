@@ -150,8 +150,8 @@ beside Claude Code and Codex.  The App Store lists them under Extensions.
  :feature lispm-hermes)
 #+end_src
 
-The library requires LispM Desktop's (~lispm-desktop-ai~ for an agent, calling
-~lispm-desktop-agent-define~) and defines ~FEATURE-unload-function~ to undo it; see
+The library requires LispM Agent's editor's agents (~lispm-agents~, calling ~lispm-agents-define~),
+never LispM Desktop's interface, and defines ~FEATURE-unload-function~ to undo it; see
 [[https://github.com/LispMachineLab/lispm-hermes][lispm-hermes]].
 
 ** Roles

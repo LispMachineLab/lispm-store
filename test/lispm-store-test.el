@@ -178,9 +178,12 @@ in a new Emacs, which loads it rather than the built-in one."
 ;;;; Apps, extensions and roles
 
 (defun lispm-store-test--desktop ()
-  "Return LispM Desktop's lisp/, which must be on the load path."
-  (file-name-directory (or (locate-library "lispm-desktop-ai")
-                           (error "LispM Desktop's lisp/ is not on the load path"))))
+  "Return the directories LispM Desktop loads from, which must be on the
+load path: its lisp/, and lispm-agent's, whose editor's agents it draws."
+  (list (file-name-directory (or (locate-library "lispm-desktop-ai")
+                                 (error "LispM Desktop's lisp/ is not on the load path")))
+        (file-name-directory (or (locate-library "lispm-agents")
+                                 (error "lispm-agent's lisp/ is not on the load path")))))
 
 (ert-deftest lispm-store-test-apps-open ()
   "Each app's command is a command once its package is installed, and an
@@ -194,7 +197,7 @@ package, which loads more of it than its autoloads."
       (should (equal (list id (lispm-store-test--emacs
                                (if command
                                    `(commandp ',command)
-                                 `(progn (add-to-list 'load-path ,(lispm-store-test--desktop))
+                                 `(progn (setq load-path (append ',(lispm-store-test--desktop) load-path))
                                          (featurep (require ',feature))))))
                      (list id t))))))
 
@@ -226,7 +229,7 @@ load path, as it is in LispM Desktop."
     (pcase-dolist (`(,id . ,item) (lispm-store-test--of-kind 'extension))
       (let ((feature (plist-get item :feature)))
         (should (equal (list id (lispm-store-test--emacs
-                                 `(progn (add-to-list 'load-path ,desktop)
+                                 `(progn (setq load-path (append ',desktop load-path))
                                          (featurep (require ',feature)))))
                        (list id t)))))))
 
