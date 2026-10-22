@@ -42,8 +42,12 @@ called, its subtitle, icon, category, description and needs are said here and no
 App Store takes them from the catalog, never from the package.
 
 | ~:subtitle~ | shown under its icon, at most 24 characters                                             |
-| ~:category~ | ~news~, ~music~, ~social~, ~productivity~, ~utilities~ or ~games~                       |
+| ~:category~ | ~news~, ~music~, ~social~, ~productivity~, ~utilities~, ~games~ or ~classic-ai~        |
 | ~:icon~     | NAME: [[file:icons/][icons/]]NAME.svg (16 pixels) and icons/NAME-32.svg (32 pixels)                     |
+| ~:banner~   | NAME: [[file:banners/][banners/]]NAME.svg, the picture over its page (see [[*The listing][The listing]])            |
+| ~:about~    | NAME: [[file:about/][about/]]NAME.md, its introduction, in Markdown                                      |
+| ~:author~   | who made what it installs, at most 48 characters                                        |
+| ~:license~  | the licence of what it installs, an SPDX expression, as ~GPL-3.0-or-later~              |
 | ~:package~  | how to install it, below; absent for a part of Emacs, such as Calc                      |
 | ~:command~  | the command that opens it, autoloaded by the package                                   |
 | ~:feature~  | instead of ~:command~, for an app running windows of its own: a library that, loaded, says what it does with ~(lispm-desktop-define-app 'ID :activate ... :menus ... :running ...)~, as [[https://github.com/LispMachineLab/lispm-stickies][lispm-stickies]] does, and is unloaded when the app is uninstalled |
@@ -61,6 +65,10 @@ when its Lisp is in a subdirectory).
  :category news
  :description "A reader of web feeds, RSS and Atom: ..."
  :icon "elfeed"
+ :banner "elfeed"
+ :about "elfeed"
+ :author "Christopher Wellons"
+ :license "Unlicense"
  :package (elfeed :url "https://github.com/skeeto/elfeed"
                   :rev "acbb86e342d2b8f85dfb30dce9df01db9a829c77")
  :command elfeed)
@@ -68,6 +76,23 @@ when its Lisp is in a subdirectory).
 
 Icons are pixel art in the Platinum style of [[https://github.com/LispMachineLab/lispm-desktop/tree/main/icons/os9][LispM Desktop's own]]: one ~rect~ per run of
 same-coloured pixels on a row, ~shape-rendering="crispEdges"~, in Mac OS 9's colours.
+
+*** The listing
+
+Every app and extension gives its whole listing, what its page in the App Store shows: ~:name~,
+~:subtitle~, ~:description~, ~:icon~, ~:banner~, ~:about~, ~:author~ and ~:license~, an app its
+~:category~ too, and the files they name.  LispM Desktop does not list an item lacking any of it.
+
+- The *banner* is pixel art of 240 by 80 pixels drawn at 480 by 160, as the icons are drawn: it
+  starts ~<svg xmlns="http://www.w3.org/2000/svg" width="480" height="160" viewBox="0 0 240 80"
+  shape-rendering="crispEdges">~ and holds ~rect~ elements only, at most 120 KB.  It shows the
+  app at work, or what it is about, without words: the page shows the name over it.
+- The *introduction* is Markdown (CommonMark's core, as [[https://github.com/LispMachineLab/lispm-desktop/blob/main/lisp/lispm-desktop-markdown.el][lispm-desktop-markdown.el]] reads it): no
+  first-level heading, as the page shows the name; ~##~ sections; paragraphs, lists, quotes,
+  code, ~**strong**~, ~*emphasis*~, ~`code`~ and links to ~https~, ~http~ or ~mailto~ addresses, which the
+  page opens; no HTML.  An image alone in its paragraph, ~![words](images/NAME.png)~, shows a
+  file of [[file:images/][images/]], never one from the network.  about/NAME.LANGUAGE.md, as about/NAME.fr.md,
+  is shown in place of it to those whose LispM speaks that language.
 
 *** Needs
 
@@ -101,6 +126,7 @@ beside Claude Code and Codex.  The App Store lists them under Extensions.
 
 | ~:subtitle~ | as an app's                                                                  |
 | ~:icon~     | as an app's                                                                  |
+| ~:banner~, ~:about~, ~:author~, ~:license~ | as an app's                                   |
 | ~:package~  | ~(PACKAGE :url URL :rev SHA)~, from git, pinned as an app's is               |
 | ~:feature~  | the library that, loaded, makes it take part; unloaded, it takes part no more |
 | ~:program~  | optional: the program it needs on ~PATH~; without it the App Store greys it out |
@@ -113,6 +139,10 @@ beside Claude Code and Codex.  The App Store lists them under Extensions.
  :subtitle "Nous Research's agent"
  :description "Hermes, Nous Research's agent, in the editor beside Claude Code and Codex: ..."
  :icon "hermes"
+ :banner "hermes"
+ :about "hermes"
+ :author "LispMachineLab"
+ :license "AGPL-3.0-or-later"
  :program "hermes"
  :install "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
  :package (lispm-hermes :url "https://github.com/LispMachineLab/lispm-hermes"
@@ -167,10 +197,12 @@ A skill that drives an app ~:requires~ it.
    (or the ~:feature~ library above), its interface described with ~lispm-desktop-app-ui-define~
    inside ~(with-eval-after-load 'lispm-desktop-app-ui ...)~; see [[https://github.com/LispMachineLab/lispm-desktop#writing-an-application][Writing an application]].
 2. *Add one item* to catalog.eld, its package pinned to a full commit SHA, of a release tag where
-   there is one, with the icons it names in [[file:icons/][icons/]].
+   there is one, with its whole listing (see [[*The listing][The listing]]): the icons it names in [[file:icons/][icons/]], its
+   banner in [[file:banners/][banners/]] and its introduction in [[file:about/][about/]].
 3. *Run ~make check~*: apps and extensions by LispM Desktop's rules (an error keeps the item out of
-   the App Store, a warning leaves it short of what it should say; both fail), then this store's:
-   unique IDs, ~:requires~, icons drawn as pixel art, the files named and no others, roles' keywords,
+   the App Store, as a listing short of its banner or introduction; a warning leaves it listed, but
+   not as it should be; both fail), then this store's: unique IDs, ~:requires~, icons and banners
+   drawn as pixel art, the files named and no others, roles' keywords,
    skills' code reads.  Offline; needs lispm-desktop's =lisp/=, beside this checkout or named by
    ~LISPM_DESKTOP~.  In LispM Desktop, =M-x lispm-desktop-store-check-catalog= says the same of any
    catalog.
@@ -185,6 +217,8 @@ A skill that drives an app ~:requires~ it.
 
 An item is merged when it keeps these rules:
 
+- *The whole listing*: a banner and an introduction of its own, its author and licence as its
+  source gives them.
 - *Pinned revisions*: a full commit SHA, of a release tag where there is one; updating it is a
   pull request.
 - *No build commands*: no ~:make~ or ~:shell-command~; packages install as package.el builds them.

@@ -133,45 +133,56 @@ Store's; those of an app or an extension are `lispm-desktop-catalog-properties'.
 
 ;;;; Applications
 
-(defun lispm-store-check--svg (name size)
-  "Check icons/NAME.svg, or icons/NAME-SIZE.svg, a pixel-art icon SIZE pixels square."
-  (let ((file (format "icons/%s%s.svg" name (if (= size 16) "" (format "-%d" size)))))
-    (if (not (file-regular-p (lispm-store-check--file file)))
-        (lispm-store-check--problem "%s: missing" file)
-      (let ((svg (lispm-store-check--text file)))
-        (unless (string-match-p
-                 (format "\\`<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"%d\" height=\"%d\" viewBox=\"0 0 %d %d\" shape-rendering=\"crispEdges\">\n"
-                         size size size size)
-                 svg)
-          (lispm-store-check--problem "%s: does not start as a %dx%d pixel-art SVG does" file size size))
-        ;; Rectangles of a colour and nothing else: no scripts, no links.
-        (let ((rest (replace-regexp-in-string
-                     "<rect x=\"[0-9]+\" y=\"[0-9]+\" width=\"[0-9]+\" height=\"[0-9]+\" fill=\"#[0-9A-F]\\{6\\}\"/>"
-                     "" (replace-regexp-in-string "\\`<svg [^>]*>\\|</svg>\n*\\'" "" svg))))
-          (unless (string-blank-p rest)
-            (lispm-store-check--problem "%s: holds more than rect elements: %s" file
-                                        (truncate-string-to-width (string-trim rest) 60))))))
-    file))
+(defconst lispm-store-check-banner-size 120000
+  "Most bytes a banner or an icon takes.")
+
+(defun lispm-store-check--pixels (file width height columns rows)
+  "Check FILE, pixel art COLUMNS by ROWS pixels drawn WIDTH by HEIGHT: an
+SVG of rectangles of a colour and nothing else."
+  (if (not (file-regular-p (lispm-store-check--file file)))
+      (lispm-store-check--problem "%s: missing" file)
+    (let ((svg (lispm-store-check--text file)))
+      (unless (string-match-p
+               (format "\\`<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"%d\" height=\"%d\" viewBox=\"0 0 %d %d\" shape-rendering=\"crispEdges\">\n"
+                       width height columns rows)
+               svg)
+        (lispm-store-check--problem "%s: does not start as a %dx%d pixel-art SVG does" file columns rows))
+      ;; Rectangles of a colour and nothing else: no scripts, no links.
+      (let ((rest (replace-regexp-in-string
+                   "<rect x=\"[0-9]+\" y=\"[0-9]+\" width=\"[0-9]+\" height=\"[0-9]+\" fill=\"#[0-9A-F]\\{6\\}\"/>"
+                   "" (replace-regexp-in-string "\\`<svg [^>]*>\\|</svg>\n*\\'" "" svg))))
+        (unless (string-blank-p rest)
+          (lispm-store-check--problem "%s: holds more than rect elements: %s" file
+                                      (truncate-string-to-width (string-trim rest) 60))))
+      (when (> (length svg) lispm-store-check-banner-size)
+        (lispm-store-check--problem "%s: is larger than %d KB" file (/ lispm-store-check-banner-size 1000)))))
+  file)
 
 (defun lispm-store-check--app-or-extension (id item)
   "Check the app or extension ID, whose properties are ITEM, by LispM
-Desktop's rules, then what only this store asks: an app built into Emacs
-is there in emacs -Q, and its icons are drawn as pixel art.  Return the
-files it uses."
-  (pcase-dolist (`(,severity . ,text) (lispm-desktop-catalog-item-problems (cons id item)))
+Desktop's rules, the files it names too, then what only this store asks:
+an app built into Emacs is there in emacs -Q, its icons and banner are
+drawn as pixel art, a banner 240 by 80 pixels shown twice that size.
+Return the files it uses: its icons, banner, introduction, the
+introduction's translations and images."
+  (pcase-dolist (`(,severity . ,text) (lispm-desktop-catalog-item-problems (cons id item) lispm-store-check-root))
     (lispm-store-check--problem "%s: %s%s" id text
                                 (if (eq severity 'error) " (LispM Desktop leaves it out)" "")))
   (let ((command (plist-get item :command))
         (feature (plist-get item :feature))
-        (icon (plist-get item :icon)))
+        (files (lispm-desktop-catalog-item-files item lispm-store-check-root)))
     (when (and (eq (plist-get item :kind) 'app) (null (plist-get item :package)))
       ;; Built into Emacs: it must be there in emacs -Q.
       (cond ((and command (symbolp command) (not (commandp command)))
              (lispm-store-check--problem "%s: %s is not a command of Emacs" id command))
             ((and (not command) feature (symbolp feature) (not (locate-library (symbol-name feature))))
              (lispm-store-check--problem "%s: %s is not a library of Emacs" id feature))))
-    (when (and (stringp icon) (string-match-p "\\`[a-z0-9][a-z0-9-]*\\'" icon))
-      (list (lispm-store-check--svg icon 16) (lispm-store-check--svg icon 32)))))
+    (dolist (file files)
+      (when (file-regular-p (lispm-store-check--file file))
+        (cond ((string-match-p "\\`icons/[^/]*-32\\.svg\\'" file) (lispm-store-check--pixels file 32 32 32 32))
+              ((string-match-p "\\`icons/" file) (lispm-store-check--pixels file 16 16 16 16))
+              ((string-match-p "\\`banners/" file) (lispm-store-check--pixels file 480 160 240 80)))))
+    files))
 
 ;;;; Roles and skills
 
@@ -319,8 +330,9 @@ Returns (KEYWORDS . BODY)."
         (visit (car item) nil)))))
 
 (defun lispm-store-check--unused (used)
-  "Report files of icons/, roles/ and skills/ that USED, the files items use, does not hold."
-  (dolist (directory '("icons" "roles" "skills"))
+  "Report files of icons/, banners/, about/, images/, roles/ and skills/
+that USED, the files items use, does not hold."
+  (dolist (directory '("icons" "banners" "about" "images" "roles" "skills"))
     (dolist (file (and (file-directory-p (lispm-store-check--file directory))
                        (directory-files-recursively (lispm-store-check--file directory) "")))
       (let ((name (file-relative-name file lispm-store-check-root)))
