@@ -146,7 +146,7 @@ beside Claude Code and Codex.  The App Store lists them under Extensions.
  :program "hermes"
  :install "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
  :package (lispm-hermes :url "https://github.com/LispMachineLab/lispm-hermes"
-                        :rev "aeb7af55924f4e8bb65e8d0df00bc0fbcd38b7c5")
+                        :rev "5078fdb1916ace4ce07028b3de09ac7e66b43167")
  :feature lispm-hermes)
 #+end_src
 
