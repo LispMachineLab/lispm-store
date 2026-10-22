@@ -287,7 +287,7 @@
    :description "Common Lisp written in Emacs Lisp, Lars Brinkhoff's emacs-cl made to run on Emacs 30 and 31: a listener, M-x emacs-cl-repl, and the Common Lisp that MYCIN and SHRDLU run on, in a batch Emacs beside yours."
    :icon "emacs-cl"
    :package (emacs-cl :url "https://github.com/LispMachineLab/emacs-cl"
-                      :rev "5bcae98f2d14756d7fd0d3e5258473d52e245c98")
+                      :rev "62007715826889b7daaedfd27cbaa9aa864842f1")
    :feature emacs-cl)
 
   ;; Agent roles, LispM Agent's: the App Store does not list them.
