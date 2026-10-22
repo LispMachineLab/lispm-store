@@ -144,7 +144,7 @@
    :name "Rotom"
    :subtitle "Your models, one address"
    :category utilities
-   :description "Rotom, a gateway on this machine to the models of your accounts, OpenAI's Codex, xAI's Grok, Kiro and Vercel's AI Gateway, for any program speaking OpenAI's API or Anthropic's: its daemon started and stopped, accounts signed in to in the browser, the models listed, and one chosen for LispM's agents."
+   :description "Rotom, a gateway on this machine to the models of the accounts you have, a ChatGPT plan through OpenAI's Codex, xAI's Grok, Kiro, Vercel's AI Gateway, for any program speaking OpenAI's API or Anthropic's, LispM's agents among them, with no API key of its own: its daemon started and stopped, accounts signed in to in the browser, the models listed, and one chosen for LispM's agents."
    :icon "rotom"
    :banner "rotom"
    :about "rotom"
@@ -153,8 +153,6 @@
    :package (lispm-rotom :url "https://github.com/LispMachineLab/lispm-rotom"
                          :rev "3eab5b8178e5566ac4e8ea236b08dc27ed840c43")
    :command lispm-rotom
-   ;; Comes with LispM: installed by itself, once.
-   :preinstalled t
    :needs ((program "rotom" :for "reaching the models of your accounts" :cargo "rotom")))
 
   ;; To chat with.

@@ -53,7 +53,6 @@ App Store takes them from the catalog, never from the package.
 | ~:command~  | the command that opens it, autoloaded by the package                                   |
 | ~:feature~  | instead of ~:command~, for an app running windows of its own: a library that, loaded, says what it does with ~(lispm-desktop-define-app 'ID :activate ... :menus ... :running ...)~, as [[https://github.com/LispMachineLab/lispm-stickies][lispm-stickies]] does, and is unloaded when the app is uninstalled |
 | ~:needs~    | optional: programs, libraries and applications it uses beyond Emacs, below             |
-| ~:preinstalled~ | optional: ~t~ when it comes with LispM: installed by itself once the catalog is read, once; uninstalled, it stays so |
 
 ~:package~ is a symbol, for a package from GNU ELPA, NonGNU ELPA or MELPA, or
 ~(PACKAGE :url URL :rev SHA)~ for one from git, at a full 40-character commit SHA (~:lisp-dir DIR~
