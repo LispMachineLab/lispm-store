@@ -191,6 +191,33 @@
                     :file "include/td/telegram/td_json_client.h")
            (program "cc" :for "building telega-server, once" :xcode t)))
 
+  ;; Games, installed.
+
+  (doom
+   :kind app
+   :name "LispM Doom"
+   :subtitle "Freedoom, with OpenGL"
+   :category games
+   :description "Doom in a buffer, its levels drawn with OpenGL by dsda-doom's engine, playing Freedoom, with sound and music."
+   :icon "doom"
+   :banner "doom"
+   :about "doom"
+   :author "LispMachineLab, dsda-doom and Freedoom"
+   :license "AGPL-3.0-or-later AND GPL-2.0-or-later AND BSD-3-Clause"
+   ;; Release 0.1.0.
+   :package (lispm-doom :url "https://github.com/LispMachineLab/lispm-doom"
+                        :rev "e64443c3878b7f59edae466346db983942cb0626"
+                        :lisp-dir "lisp")
+   :command lispm-doom
+   ;; It runs in Emacs 32, LispM's experimental install.
+   :emacs 32
+   :needs ((library "SDL2_mixer" :for "the game's sound and music" :brew "sdl2_mixer"
+                    :file "lib/libSDL2_mixer-2.0.0.dylib")
+           (library "libsndfile" :for "the game's sounds" :brew "libsndfile"
+                    :file "lib/libsndfile.1.dylib")
+           (library "libzip" :for "reading zipped game files" :brew "libzip"
+                    :file "lib/libzip.5.dylib")))
+
   ;; Games, built into Emacs.
 
   (tetris
