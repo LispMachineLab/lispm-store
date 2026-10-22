@@ -120,7 +120,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-security :url "https://github.com/LispMachineLab/lispm-security"
-                            :rev "6486295285c68eca1a92306f03cc60203c2b5c24")
+                            :rev "40d7ad784a04089a8a9c72b1853217a2719ae7af")
    :command lispm-security)
 
   (1password
