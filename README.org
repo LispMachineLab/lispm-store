@@ -157,7 +157,7 @@ never LispM Desktop's interface, and defines ~FEATURE-unload-function~ to undo i
 
 ** Roles
 
-Roles and skills are LispM Agent's; the App Store does not list them.  A role is
+Roles and skills are LispM Agent's; the App Store lists neither.  A role is
 ~:file "roles/ID.org"~:
 
 #+begin_src org
@@ -190,7 +190,15 @@ Instructions, for the model to read ...
 ,#+end_src
 #+end_src
 
-A skill that drives an app ~:requires~ it.
+A skill is the manual of what it ~:requires~: the apps or extensions it drives, one at least.
+LispM Desktop's App Store installs it with them, updates it when they are updated, the skill
+pinned by its hash meanwhile, and removes it with them; it never lists a skill on its own.
+
+Agents do not get a list of skills: they find them with ~search_tools~, by their title,
+description and headings and by the tools their code defines, read without evaluating it.  So
+give each tool a literal ~(lispm-deftool NAME PARAMS "DOC" ...)~ at the top of a ~:lispm load~
+block, or in a ~progn~, ~with-eval-after-load~, ~when~ or ~unless~ there; ~make test~ checks
+that the agent's index sees every tool a skill defines.
 
 * Listing an item
 
@@ -204,11 +212,12 @@ A skill that drives an app ~:requires~ it.
    the App Store, as a listing short of its banner or introduction; a warning leaves it listed, but
    not as it should be; both fail), then this store's: unique IDs, ~:requires~, icons and banners
    drawn as pixel art, the files named and no others, roles' keywords,
-   skills' code reads.  Offline; needs lispm-desktop's =lisp/=, beside this checkout or named by
+   skills' code reads, skills require the apps or extensions they drive.  Offline; needs lispm-desktop's =lisp/=, beside this checkout or named by
    ~LISPM_DESKTOP~.  In LispM Desktop, =M-x lispm-desktop-store-check-catalog= says the same of any
    catalog.
 4. *Run ~make test~*: installs every package as LispM Desktop does and checks that apps' commands
-   exist and extensions load, that roles name real tools, and runs the skills' tools.  Needs the
+   exist and extensions load, that roles name real tools, that agents' search sees every tool
+   of each skill, and runs the skills' tools.  Needs the
    network and checkouts of lispm-agent and lispm-desktop beside this one (or ~LISPM_AGENT~ and
    ~LISPM_DESKTOP~ naming their =lisp/=).  A new skill adds its test to [[file:test/lispm-store-test.el][test/lispm-store-test.el]].
 5. *Open a pull request* adding the item and its files only.  CI runs both checks on Emacs 30.1 and

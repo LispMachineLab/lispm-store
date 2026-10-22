@@ -49,7 +49,7 @@
 
 (defconst lispm-store-check-keys
   '((role :required (:kind :name :description :file) :optional (:requires))
-    (skill :required (:kind :name :description :file) :optional (:requires)))
+    (skill :required (:kind :name :description :file :requires) :optional ()))
   "The properties of an item of each kind LispM Agent's, not the App
 Store's; those of an app or an extension are `lispm-desktop-catalog-properties'.")
 
@@ -315,7 +315,12 @@ Returns (KEYWORDS . BODY)."
                   ((and (memq (plist-get item :kind) '(app extension))
                         (not (memq (plist-get (cdr (assq other items)) :kind) '(app extension))))
                    (lispm-store-check--problem "%s: requires %S, which the App Store does not install"
-                                               id other))))))))
+                                               id other))
+                  ;; A skill comes with what it drives, and goes with it.
+                  ((and (eq (plist-get item :kind) 'skill)
+                        (not (memq (plist-get (cdr (assq other items)) :kind) '(app extension))))
+                   (lispm-store-check--problem "%s: requires %S; a skill requires the apps or extensions \
+it drives, which the App Store installs it with" id other))))))))
   ;; A cycle would leave no order to install them in.
   (let (done)
     (cl-labels ((visit (id path)
