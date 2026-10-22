@@ -393,7 +393,7 @@
    :author "LispMachineLab, after Terry Winograd"
    :license "AGPL-3.0-or-later"
    :package (lispm-shrdlu :url "https://github.com/LispMachineLab/lispm-shrdlu"
-                          :rev "8e48d34a8be2049c4d65ca32cd3841f7c03c43b5")
+                          :rev "242825867177b6857a7476fbd20c53dabef5c19f")
    :command lispm-shrdlu
    :requires (emacs-cl)
    :needs ((program "git" :for "fetching SHRDLU's Common Lisp on its first start" :xcode t)))
