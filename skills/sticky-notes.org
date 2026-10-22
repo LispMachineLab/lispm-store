@@ -1,0 +1,122 @@
+#+title: Stick notes
+#+description: Stick notes on the user's desktop with Stickies: list and read them, put up a new note in a colour, change a note's text or colour, and bring it in front.
+
+The user keeps notes with Stickies: each note is a small window of coloured paper over the
+desktop, and all of them are kept in one org file (~lispm-stickies-file~), a heading each.
+Stickies writes that file while it runs, so change notes through this skill's tools, never by
+editing the file.  This skill gives you those tools, and the functions behind them for
+~eval_elisp~.
+
+* Finding notes
+
+- ~stickies_list~: the notes, the oldest first, each with its identity, its colour, its first
+  line and when it last changed.  The identity names the note to the other tools.
+- ~stickies_read~ ID: a note's whole text.
+
+* Changing them
+
+- ~stickies_add~ TEXT: a new note in front of the others, holding TEXT, on yellow paper or of
+  COLOR: yellow, blue, green, pink, purple, gray or black-and-white.  Stickies opens if it was
+  closed.  A note rolled up shows only its first line, so put what matters there, short: "Call
+  Sam at 5", not "Reminder: you asked me to remind you to call Sam at 5".
+- ~stickies_edit~ ID TEXT: make TEXT a note's text, and bring it in front.
+- ~stickies_color~ ID COLOR: a note's colour, and bring it in front.
+
+They are of the permission class ~write~, as they change the notes' file: unless the user's
+policy lets them run, the user approves each call.  Put up a note when the user asks for one,
+change only the notes they name, and keep their words.  Throwing a note away is the user's to
+do: its close box, or C-c C-k in it.
+
+* Beyond the tools
+
+With ~eval_elisp~: ~(lispm-stickies)~ opens Stickies, its notes coming back where they were;
+~(lispm-stickies-quit)~ puts them away.  ~(lispm-stickies-notes)~ is the notes as plists (~:id~,
+~:color~, ~:text~, ~:created~, ~:modified~); ~(lispm-stickies-find-note ID)~ a note's buffer, which
+~(lispm-stickies-roll BUFFER)~ rolls up or down and ~(lispm-stickies-zoom BUFFER)~ sizes to its text.
+
+* The code
+
+#+begin_src emacs-lisp :lispm load
+(require 'lispm-stickies)
+
+(defun lispm-sticky-notes-color (name)
+  "The colour of Stickies NAME names, as \"Black & White\" or gray: a key of
+`lispm-stickies-colors'; nil when NAME is nil or empty."
+  (unless (or (null name) (string-blank-p name))
+    (let* ((words (replace-regexp-in-string "&" " and " (downcase (string-trim name))))
+           (key (intern (replace-regexp-in-string "[ \t_-]+" "-" (string-trim words)))))
+      (cond ((assq key lispm-stickies-colors) key)
+            ((eq key 'grey) 'gray)
+            (t (error "Stickies has no colour %s; it has %s" name
+                      (mapconcat (lambda (color) (symbol-name (car color))) lispm-stickies-colors ", ")))))))
+
+(defun lispm-sticky-notes-note (id)
+  "The buffer of the note ID; an error when there is no such note."
+  (or (lispm-stickies-find-note id)
+      (error "No note %s; stickies_list names the notes" id)))
+
+(defun lispm-sticky-notes-describe (note)
+  "NOTE, a plist of `lispm-stickies-notes', in a line: identity, colour,
+first line, last change."
+  (let ((line (seq-find (lambda (line) (not (string-blank-p line)))
+                        (split-string (plist-get note :text) "\n"))))
+    (format "%s  %s  %s  (changed %s)" (plist-get note :id) (plist-get note :color)
+            (if line (truncate-string-to-width (string-trim line) 60 nil nil "…") "(empty)")
+            (format-time-string "%Y-%m-%d %H:%M" (plist-get note :modified)))))
+
+(defun lispm-sticky-notes-described (id)
+  "The note ID in a line, as `lispm-sticky-notes-describe' puts it."
+  (lispm-sticky-notes-describe
+   (seq-find (lambda (note) (equal (plist-get note :id) id)) (lispm-stickies-notes))))
+
+(defun lispm-sticky-notes--file (&rest _)
+  "The file the notes are kept in, which the tools that change them write."
+  (list (expand-file-name lispm-stickies-file)))
+
+(lispm-deftool stickies_list ()
+  "List the notes on the user's desktop, the oldest first: identity, colour, first line and last change."
+  (if-let* ((notes (lispm-stickies-notes)))
+      (mapconcat #'lispm-sticky-notes-describe notes "\n")
+    "There are no notes."))
+
+(lispm-deftool stickies_read
+    ((id string "The note's identity, as stickies_list gives it."))
+  "Read a note's whole text."
+  (let ((note (seq-find (lambda (note) (equal (plist-get note :id) id)) (lispm-stickies-notes))))
+    (unless note
+      (error "No note %s; stickies_list names the notes" id))
+    (if (string-empty-p (plist-get note :text)) "(The note is empty.)" (plist-get note :text))))
+
+(lispm-deftool stickies_add
+    ((text string "What the note says; its first line is its title when it is rolled up.")
+     (color string "Its paper: yellow (the default), blue, green, pink, purple, gray or black-and-white."
+            :optional t))
+  "Stick a new note on the user's desktop, in front of the others; say which it is."
+  :permission write
+  :targets #'lispm-sticky-notes--file
+  (lispm-stickies-new-note text (lispm-sticky-notes-color color))
+  ;; The new note is the newest.
+  (format "Stuck a note on the desktop: %s" (lispm-sticky-notes-describe (car (last (lispm-stickies-notes))))))
+
+(lispm-deftool stickies_edit
+    ((id string "The note's identity, as stickies_list gives it.")
+     (text string "The note's whole new text."))
+  "Change a note's text, and bring the note in front."
+  :permission write
+  :targets #'lispm-sticky-notes--file
+  (let ((buffer (lispm-sticky-notes-note id)))
+    (lispm-stickies-set-text buffer text)
+    (lispm-stickies-show-note buffer)
+    (format "Changed: %s" (lispm-sticky-notes-described id))))
+
+(lispm-deftool stickies_color
+    ((id string "The note's identity, as stickies_list gives it.")
+     (color string "yellow, blue, green, pink, purple, gray or black-and-white."))
+  "Change a note's colour, and bring the note in front."
+  :permission write
+  :targets #'lispm-sticky-notes--file
+  (let ((buffer (lispm-sticky-notes-note id)))
+    (lispm-stickies-set-color (lispm-sticky-notes-color color) buffer)
+    (lispm-stickies-show-note buffer)
+    (format "Changed: %s" (lispm-sticky-notes-described id))))
+#+end_src
