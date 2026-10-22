@@ -53,6 +53,7 @@ App Store takes them from the catalog, never from the package.
 | ~:command~  | the command that opens it, autoloaded by the package                                   |
 | ~:feature~  | instead of ~:command~, for an app running windows of its own: a library that, loaded, says what it does with ~(lispm-desktop-define-app 'ID :activate ... :menus ... :running ...)~, as [[https://github.com/LispMachineLab/lispm-stickies][lispm-stickies]] does, and is unloaded when the app is uninstalled |
 | ~:needs~    | optional: programs, libraries and applications it uses beyond Emacs, below             |
+| ~:preinstalled~ | optional: ~t~ when it comes with LispM: installed by itself once the catalog is read, once; uninstalled, it stays so |
 
 ~:package~ is a symbol, for a package from GNU ELPA, NonGNU ELPA or MELPA, or
 ~(PACKAGE :url URL :rev SHA)~ for one from git, at a full 40-character commit SHA (~:lisp-dir DIR~
@@ -103,6 +104,7 @@ Every app and extension gives its whole listing, what its page in the App Store 
 | ~:brew~      | the Homebrew formula installing it; ~:cask~ for an application                      |
 | ~:head~      | ~t~ to install the formula's HEAD, where its release is too old                     |
 | ~:xcode~     | ~t~ for a program of Apple's command line tools, as ~git~ or ~swift~                |
+| ~:cargo~     | the crate Cargo builds a program from, for one Homebrew lacks, as ~rotom~           |
 | ~:instead~   | programs doing its work while it is missing, as ~afplay~ for ~mpv~                  |
 | ~:more~      | what it does that they do not                                                       |
 | ~:commands~  | the app's commands needing it, which offer to install it first                      |
@@ -111,7 +113,9 @@ Every app and extension gives its whole listing, what its page in the App Store 
 | ~:bundle~    | an application's bundle identifier                                                  |
 
 What is missing never blocks installing the app: Get installs it alongside, one install at a time
-in LispM Desktop's Installer, with Homebrew.  The catalog names formulas and casks, never commands.
+in LispM Desktop's Installer, with Homebrew, or with Cargo, which Homebrew brings first if it is
+missing.  The catalog names formulas, casks and crates, never commands.  What Cargo built is never
+uninstalled: it may run on its own, as Rotom's daemon does.
 
 #+begin_src lisp-data
 (yeetube

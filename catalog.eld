@@ -139,6 +139,24 @@
    :command lispm-1password
    :needs ((program "op" :for "reading your vaults" :cask "1password-cli")))
 
+  (rotom
+   :kind app
+   :name "Rotom"
+   :subtitle "Your models, one address"
+   :category utilities
+   :description "Rotom, a gateway on this machine to the models of your accounts, OpenAI's Codex, xAI's Grok, Kiro and Vercel's AI Gateway, for any program speaking OpenAI's API or Anthropic's: its daemon started and stopped, accounts signed in to in the browser, the models listed, and one chosen for LispM's agents."
+   :icon "rotom"
+   :banner "rotom"
+   :about "rotom"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
+   :package (lispm-rotom :url "https://github.com/LispMachineLab/lispm-rotom"
+                         :rev "3eab5b8178e5566ac4e8ea236b08dc27ed840c43")
+   :command lispm-rotom
+   ;; Comes with LispM: installed by itself, once.
+   :preinstalled t
+   :needs ((program "rotom" :for "reaching the models of your accounts" :cargo "rotom")))
+
   ;; To chat with.
 
   (erc
@@ -486,6 +504,13 @@
    :description "Lets agents find, play, pause and skip music with EMMS, and say what is playing."
    :file "skills/music.org"
    :requires (emms))
+
+  (use-rotom
+   :kind skill
+   :name "Use Rotom"
+   :description "Lets agents read where Rotom stands, its daemon, accounts, models and log, renew its tokens, start or restart its daemon and choose the model LispM's agents use; signing in stays yours."
+   :file "skills/use-rotom.org"
+   :requires (rotom))
 
   (check-security
    :kind skill

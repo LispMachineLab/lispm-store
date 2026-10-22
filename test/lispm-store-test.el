@@ -418,6 +418,43 @@ in OSV only when the user lets it."
         (should (string-match-p "\\`Not looked up: looking up is turned off"
                                 (lispm-store-test--call-async "security_look_up")))))))
 
+;;;; Rotom
+
+(ert-deftest lispm-store-test-use-rotom ()
+  "The Rotom skill reads Rotom, renews its tokens, restarts its daemon and
+chooses LispM's model, against the stand-ins for rotom and curl its
+package tests with: no daemon is touched, no account signed in to."
+  (lispm-store-test--load-skills)
+  (let* ((fakes (expand-file-name "test/" (file-name-directory (locate-library "lispm-rotom"))))
+         (dir (make-temp-file "lispm-store-rotom" t))
+         (process-environment (cons (concat "FAKE_ROTOM_DIR=" dir) process-environment))
+         (lispm-rotom-program (expand-file-name "fake-rotom" fakes))
+         (lispm-rotom-curl-program (expand-file-name "fake-curl" fakes))
+         (lispm-rotom-directory (expand-file-name "home/" dir))
+         (lispm-rotom-config nil)
+         (lispm-rotom-daemon nil)
+         (custom-file (expand-file-name "custom.el" dir))
+         (user-init-file (expand-file-name "init.el" dir))
+         (lispm-backend nil)
+         (lispm-model nil))
+    (dolist (file '("installed" "running"))
+      (with-temp-file (expand-file-name file dir)))
+    (with-temp-file (expand-file-name "accounts" dir) (insert "codex\ngrok\n"))
+    (let ((status (lispm-store-test--call-async "rotom_status")))
+      (should (string-match-p "Its daemon runs at http://127.0.0.1:14550" status))
+      (should (string-match-p "- Grok (xAI) (grok): signed in, token for 3 hours" status))
+      (should (string-match-p "- Kiro (kiro): not signed in" status)))
+    (should (string-match-p "\\`Grok (xAI) (grok), signed in:\n- grok-4.7"
+                            (lispm-store-test--call-async "rotom_models" "grok")))
+    (should (string-match-p "has written no log" (lispm-store-test--call "rotom_log" nil)))
+    (should (string-match-p "\\`refreshed Codex credentials" (lispm-store-test--call-async "rotom_refresh" "codex")))
+    (should (string-match-p "Its daemon runs" (lispm-store-test--call-async "rotom_daemon" "restart")))
+    (should (string-match-p "now use grok-4.7 through Rotom's Chat Completions side"
+                            (lispm-store-test--call-async "rotom_use" "grok-4.7" nil)))
+    (should (eq lispm-backend 'rotom))
+    (should (equal lispm-model "grok-4.7"))
+    (delete-directory dir t)))
+
 ;;;; Chat
 
 (defun lispm-store-test--wait (predicate &optional seconds)

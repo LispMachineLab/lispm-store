@@ -1,0 +1,137 @@
+#+title: Use Rotom
+#+description: Read where the user's Rotom gateway stands (daemon, accounts, models, log), find out why requests through it fail, renew its tokens, start or restart its daemon, and choose the model LispM's agents use through it.
+
+The user's Rotom app (the package lispm-rotom) drives Rotom, a gateway on this machine: the user
+signs in to accounts there, OpenAI's Codex (=codex=), xAI's Grok (=grok=), Kiro (=kiro=) or
+Vercel's AI Gateway (=vercel=), and any program speaking OpenAI's API or Anthropic's reaches their
+models through Rotom's daemon.  LispM's agents may be such programs: you may be talking through
+Rotom yourself.  This skill gives you Rotom's state and the few things you may change.
+
+Use it when the user asks about Rotom, its models or accounts, when model requests fail and Rotom
+may be why, or when the user wants LispM's agents to use another of Rotom's models.
+
+* What Rotom is
+
+- One daemon, at =http://127.0.0.1:14550= unless its configuration says otherwise.  OpenAI's API
+  is under =/v1=: =/v1/chat/completions=, =/v1/responses=, =/v1/models=.  Anthropic's Messages is
+  =/v1/messages=, so Anthropic's clients take the root as their base URL, never =/v1=.
+- Each model is served by the account offering it.  A model of an account not signed in fails
+  with "not logged in for model …".  An unknown Anthropic id, such as =claude-sonnet-…=, is
+  answered by Rotom's fallback model.  Kiro's models that share a name with Codex's carry the
+  prefix =kiro/=; Vercel's keep their namespace (=openai/…=, =anthropic/…=).
+- Rotom may ask programs for a key of its own, its configuration's =api_key=: it is not any
+  account's.  The accounts' credentials are in =~/.rotom/auth.json=.  Never read that file, never
+  show a token, never ask the user for one.
+- For LispM, Rotom is two backends: =rotom= (Chat Completions) and =rotom-messages= (Messages).
+
+* Reading where it stands
+
+- ~rotom_status~: Rotom's version; whether the daemon runs, and where; each account, signed in or
+  not, and how long its token lasts; the credits and rate limits of the account served first;
+  how many models are offered; which model LispM's agents use, and whether Rotom offers it.
+- ~rotom_models~ PROVIDER: the models of each account, or of one, and whether it is signed in.
+- ~rotom_log~ LINES: the last lines the daemon wrote to its log of errors.
+
+Read before you answer: what you say is then about Rotom as it is now.
+
+* When requests fail
+
+Go step by step, and stop at the first cause found:
+
+1. ~rotom_status~.  Is the daemon running?  If not, offer to start it (~rotom_daemon~ =start=).
+2. Is the account of the model asked for signed in, and its token valid?  A token expired or one
+   that could not be renewed: ~rotom_refresh~ for that account.  If that fails too, the user signs
+   in again, in Rotom's window.
+3. Is the model among ~rotom_models~ of an account signed in?  If not, name the closest that is.
+4. ~rotom_log~: the daemon's errors say the rest, as an account refusing a model ("not
+   supported when using Codex with a ChatGPT account": choose another model) or a network
+   failure reaching the account's site.
+
+* Changing things
+
+- ~rotom_refresh~ PROVIDER: renew the tokens of the accounts, or of one.
+- ~rotom_daemon~ ACTION: =start= (installed as a service of the system first, if need be),
+  =restart=, or =stop=.  Restart only when needed, as after a sign-in or an update: requests on
+  their way through it fail.  Stopping it cuts every program using it off its models, LispM's
+  agents among them, perhaps you: never stop it unless the user asks for that.
+- ~rotom_use~ MODEL MESSAGES: have LispM's agents use MODEL through Rotom, saved with Customize,
+  from the conversations started next on; with MESSAGES, through its Messages side.  The user
+  approves each call.  A conversation already open, this one too, keeps its model; its =/model=
+  switches it.
+
+* What only the user does
+
+- Signing in to an account happens in the browser, or with a key the user types.  Tell them to
+  open Rotom (=M-x lispm-rotom=, or Rotom in the Applications folder) and press =l=, or *Sign In…*.
+- Updating Rotom itself, which Cargo builds anew: =U= in Rotom's window.
+
+* The code
+
+#+begin_src emacs-lisp :lispm load
+(require 'lispm-rotom)
+
+(lispm-deftool rotom_status ()
+  "Read where Rotom stands now: its daemon, running or not and where; each account, signed in or not, and how long its token lasts; the credits and rate limits of the account served first; and the model LispM's agents use, offered or not."
+  :async t
+  (lispm-rotom-read (lambda () (funcall done (lispm-rotom-report)))))
+
+(lispm-deftool rotom_models
+    ((provider string "The account whose models to list; all of them when not given."
+               :optional t :enum ("codex" "grok" "kiro" "vercel")))
+  "List the models Rotom offers, by account, and whether each account is signed in, so serving them."
+  :async t
+  (lispm-rotom-read (lambda ()
+                      (funcall done (lispm-rotom-models-report (and provider (intern provider)))))))
+
+(lispm-deftool rotom_log
+    ((lines integer "How many of the last lines to read; 40 when not given." :optional t))
+  "Read the last lines Rotom's daemon wrote to its log of errors: why requests failed, an account refusing a model, a network failure."
+  (lispm-rotom-log-tail (and lines (max 1 (min lines 400)))))
+
+(lispm-deftool rotom_refresh
+    ((provider string "The account whose tokens to renew; all of them when not given."
+               :optional t :enum ("codex" "grok" "kiro" "vercel")))
+  "Renew the tokens of the accounts signed in to Rotom, or of one, as when one expired or could not be renewed by itself."
+  :permission shell
+  :async t
+  (lispm-rotom-refresh-tokens (and provider (intern provider))
+                              (lambda (said &optional failed)
+                                (if failed
+                                    (funcall done (format "Not renewed: %s" said) t)
+                                  (funcall done (concat said "\n\n" (lispm-rotom-report)))))))
+
+(lispm-deftool rotom_daemon
+    ((action string "What to do with the daemon." :enum ("start" "restart" "stop")))
+  "Start, restart or stop Rotom's daemon.  Starting installs it as a service of the system first if it is not one.  Stopping cuts every program using it off its models, LispM's agents among them: only when the user asks."
+  :permission shell
+  :async t
+  (funcall (pcase action
+             ("start" #'lispm-rotom-start)
+             ("restart" #'lispm-rotom-restart)
+             ("stop" #'lispm-rotom-stop)
+             (_ (error "No such action: %s" action)))
+           (lambda (why)
+             (if why
+                 (funcall done (format "The daemon did not %s: %s" action why) t)
+               (funcall done (lispm-rotom-report))))))
+
+(lispm-deftool rotom_use
+    ((model string "A model Rotom offers through an account signed in to, as rotom_models lists it.")
+     (messages boolean "Use Rotom's Messages side, Anthropic's API, instead of its Chat Completions side."
+               :optional t))
+  "Have LispM's agents use MODEL through Rotom from the next conversation on, saved with Customize as lispm-backend and lispm-model.  The user approves each call."
+  :permission write
+  :always-ask t
+  :async t
+  (lispm-rotom-read
+   (lambda ()
+     (condition-case err
+         (progn
+           (lispm-rotom-use model messages)
+           (funcall done (format "LispM's agents now use %s through Rotom's %s side, from the next conversation on%s."
+                                 model (if messages "Messages" "Chat Completions")
+                                 (if (member model (lispm-rotom-model-ids))
+                                     ""
+                                   "; Rotom does not offer it through an account signed in to: check rotom_models"))))
+       (error (funcall done (error-message-string err) t))))))
+#+end_src
