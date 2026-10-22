@@ -205,7 +205,7 @@
    :author "LispMachineLab, dsda-doom and Freedoom"
    :license "AGPL-3.0-or-later AND GPL-2.0-or-later AND BSD-3-Clause"
    :package (lispm-doom :url "https://github.com/LispMachineLab/lispm-doom"
-                        :rev "1479acf96a509dfb8bda4eb0b3444c7a0acfa149")
+                        :rev "93dcb519a97821ffc110391f082369a57dddc0bd")
    :command lispm-doom
    ;; Canvas images, which show the frames, came with Emacs 32.
    :emacs 32
