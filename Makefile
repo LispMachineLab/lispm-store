@@ -8,10 +8,11 @@ LISPM_DESKTOP ?= ../lispm-desktop/lisp
 
 .PHONY: check test
 
-# The catalog and the files it names, read as LispM Desktop reads them.
-# Offline, and nothing beyond Emacs.
+# The catalog and the files it names, read as LispM Desktop reads them,
+# its applications and extensions by LispM Desktop's own rules
+# (lispm-desktop-catalog.el).  Offline.
 check:
-	$(EMACS) -Q --batch -l test/lispm-store-check.el -f lispm-store-check
+	$(EMACS) -Q --batch -L $(LISPM_DESKTOP) -l test/lispm-store-check.el -f lispm-store-check
 
 # What check cannot see without installing: the apps' and extensions'
 # packages, installed as LispM Desktop installs them, the extensions loaded
