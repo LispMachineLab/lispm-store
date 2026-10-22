@@ -204,10 +204,11 @@
    :about "doom"
    :author "LispMachineLab, dsda-doom and Freedoom"
    :license "AGPL-3.0-or-later AND GPL-2.0-or-later AND BSD-3-Clause"
+   ;; Release 0.1.0.
    :package (lispm-doom :url "https://github.com/LispMachineLab/lispm-doom"
-                        :rev "93dcb519a97821ffc110391f082369a57dddc0bd")
+                        :rev "e64443c3878b7f59edae466346db983942cb0626")
    :command lispm-doom
-   ;; Canvas images, which show the frames, came with Emacs 32.
+   ;; It runs in Emacs 32, LispM's experimental install.
    :emacs 32
    :needs ((library "SDL2_mixer" :for "the game's sound and music" :brew "sdl2_mixer"
                     :file "lib/libSDL2_mixer-2.0.0.dylib")

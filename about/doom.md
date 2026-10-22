@@ -17,14 +17,14 @@ stops while its window is hidden or LispM is not in front.
 
 ## What it needs
 
-Emacs 32, whose canvas images show the frames: Emacs 31 has none, and the App Store installs
-lispm-doom only on Emacs 32.  The Kernel panel of Control Panels switches LispM to it.  Its
-engine links with Homebrew's SDL2_mixer, libsndfile and libzip, which the App Store installs
-with it.
+Emacs 32, as LispM's experimental install has it: the App Store installs lispm-doom only there,
+and the Kernel panel of Control Panels switches LispM to it.  Its engine links with Homebrew's
+SDL2_mixer, libsndfile and libzip, which the App Store installs with it.
 
 ## Where it comes from
 
 id Software released Doom in December 1993, and the source of its engine in 1997.  This engine
 is dsda-doom, the descendant of PrBoom+, whose OpenGL renderer draws here in a framebuffer of
-its own, its window taken out; each frame goes to Emacs as an image.  Freedoom has been made by
+its own, its window taken out; each frame goes to Emacs as an image, scaled up to fill the
+window.  Freedoom has been made by
 its contributors since 2001, under a BSD licence.
