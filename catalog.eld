@@ -266,6 +266,20 @@
    :icon "doctor"
    :command doctor)
 
+  ;; Programs from the history of AI, in Common Lisp.
+
+  (mycin
+   :kind app
+   :name "MYCIN"
+   :subtitle "The 1970s expert system"
+   :category games
+   :description "MYCIN, Stanford's expert system of the 1970s: it asks about a patient and the cultures taken, names the organisms likely to infect the blood with how certain it is, and says why it asks. Norvig's Common Lisp from Paradigms of AI Programming, run unchanged."
+   :icon "mycin"
+   :package (lispm-mycin :url "https://github.com/LispMachineLab/lispm-mycin"
+                         :rev "6b6a9493a01efac7a5bc27bf5343daa5d5b8afb4")
+   :command lispm-mycin
+   :requires (emacs-cl))
+
   ;; Extensions.
 
   (hermes
