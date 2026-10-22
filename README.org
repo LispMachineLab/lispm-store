@@ -17,7 +17,9 @@ reviewed before it is merged (see [[*Review][Review]]).
 
 * The catalog
 
-catalog.eld holds one property list:
+The format below is LispM Desktop's: [[https://github.com/LispMachineLab/lispm-desktop/blob/main/lisp/lispm-desktop-catalog.el][lispm-desktop-catalog.el]] says it for apps and extensions,
+and both its App Store and this repository's ~make check~ read the catalog by it.  catalog.eld
+holds one property list:
 
 #+begin_src lisp-data
 (:name "LispM Store"
@@ -35,14 +37,16 @@ ID is a lower-case symbol unique in the catalog.  Every item has:
 
 ** Applications
 
-An app opens in a window of its own on the desktop, with its own menus in the menu bar.
+An app opens in a window of its own on the desktop, with its own menus in the menu bar.  What it is
+called, its subtitle, icon, category, description and needs are said here and nowhere else: the
+App Store takes them from the catalog, never from the package.
 
 | ~:subtitle~ | shown under its icon, at most 24 characters                                             |
 | ~:category~ | ~news~, ~music~, ~social~, ~productivity~, ~utilities~ or ~games~                       |
 | ~:icon~     | NAME: [[file:icons/][icons/]]NAME.svg (16 pixels) and icons/NAME-32.svg (32 pixels)                     |
 | ~:package~  | how to install it, below; absent for a part of Emacs, such as Calc                      |
 | ~:command~  | the command that opens it, autoloaded by the package                                   |
-| ~:feature~  | instead of ~:command~: a library that adds the app when loaded and removes it when unloaded, as [[https://github.com/LispMachineLab/lispm-stickies][lispm-stickies]] does with ~lispm-desktop-define-app~ |
+| ~:feature~  | instead of ~:command~, for an app running windows of its own: a library that, loaded, says what it does with ~(lispm-desktop-define-app 'ID :activate ... :menus ... :running ...)~, as [[https://github.com/LispMachineLab/lispm-stickies][lispm-stickies]] does, and is unloaded when the app is uninstalled |
 | ~:needs~    | optional: programs, libraries and applications it uses beyond Emacs, below             |
 
 ~:package~ is a symbol, for a package from GNU ELPA, NonGNU ELPA or MELPA, or
@@ -159,17 +163,23 @@ A skill that drives an app ~:requires~ it.
 
 * Listing an item
 
-Open a pull request adding one item to catalog.eld, with the files it names.  First run:
-
-- ~make check~: the catalog as LispM Desktop reads it (properties per kind, unique IDs, categories,
-  subtitles, full SHAs, the files named and no others, ~:requires~, roles' keywords, skills' code
-  reads).  Needs only Emacs.
-- ~make test~: installs every package as LispM Desktop does and checks that apps' commands exist
-  and extensions load, that roles name real tools, and runs the skills' tools.  Needs the network
-  and checkouts of lispm-agent and lispm-desktop beside this one (or ~LISPM_AGENT~ and
-  ~LISPM_DESKTOP~ naming their =lisp/=).  A new skill adds its test to [[file:test/lispm-store-test.el][test/lispm-store-test.el]].
-
-CI runs both on Emacs 30.1 and 31.1.
+1. *Write the package*, in a repository of its own: an app's autoloaded command opening its buffer
+   (or the ~:feature~ library above), its interface described with ~lispm-desktop-app-ui-define~
+   inside ~(with-eval-after-load 'lispm-desktop-app-ui ...)~; see [[https://github.com/LispMachineLab/lispm-desktop#writing-an-application][Writing an application]].
+2. *Add one item* to catalog.eld, its package pinned to a full commit SHA, of a release tag where
+   there is one, with the icons it names in [[file:icons/][icons/]].
+3. *Run ~make check~*: apps and extensions by LispM Desktop's rules (an error keeps the item out of
+   the App Store, a warning leaves it short of what it should say; both fail), then this store's:
+   unique IDs, ~:requires~, icons drawn as pixel art, the files named and no others, roles' keywords,
+   skills' code reads.  Offline; needs lispm-desktop's =lisp/=, beside this checkout or named by
+   ~LISPM_DESKTOP~.  In LispM Desktop, =M-x lispm-desktop-store-check-catalog= says the same of any
+   catalog.
+4. *Run ~make test~*: installs every package as LispM Desktop does and checks that apps' commands
+   exist and extensions load, that roles name real tools, and runs the skills' tools.  Needs the
+   network and checkouts of lispm-agent and lispm-desktop beside this one (or ~LISPM_AGENT~ and
+   ~LISPM_DESKTOP~ naming their =lisp/=).  A new skill adds its test to [[file:test/lispm-store-test.el][test/lispm-store-test.el]].
+5. *Open a pull request* adding the item and its files only.  CI runs both checks on Emacs 30.1 and
+   31.1, against lispm-desktop's main; it is merged once it keeps the rules below.
 
 * Review
 
