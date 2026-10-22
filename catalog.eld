@@ -276,7 +276,7 @@
    :description "MYCIN, Stanford's expert system of the 1970s: it asks about a patient and the cultures taken, names the organisms likely to infect the blood with how certain it is, and says why it asks. Norvig's Common Lisp from Paradigms of AI Programming, run unchanged."
    :icon "mycin"
    :package (lispm-mycin :url "https://github.com/LispMachineLab/lispm-mycin"
-                         :rev "1fe5c980f71e1301990f96a3d893fc5674982b85")
+                         :rev "6b6a9493a01efac7a5bc27bf5343daa5d5b8afb4")
    :command lispm-mycin
    :requires (emacs-cl))
 
