@@ -16,6 +16,10 @@
    :category news
    :description "A reader of web feeds, RSS and Atom: blogs, news and podcasts, searched and tagged in Emacs."
    :icon "elfeed"
+   :banner "elfeed"
+   :about "elfeed"
+   :author "Christopher Wellons"
+   :license "Unlicense"
    ;; Release 4.2.1.
    :package (elfeed :url "https://github.com/skeeto/elfeed"
                     :rev "acbb86e342d2b8f85dfb30dce9df01db9a829c77")
@@ -28,6 +32,10 @@
    :category music
    :description "The Emacs Multimedia System: your Music library and folders of music, played through mpv or macOS's afplay, with playlists and a browser of your library."
    :icon "emms"
+   :banner "emms"
+   :about "emms"
+   :author "Jorgen Schäfer and the Emms developers"
+   :license "GPL-3.0-or-later"
    :package emms
    :command emms-browser
    :needs ((program "mpv" :for "playing music" :brew "mpv"
@@ -42,6 +50,10 @@
    :category music
    :description "YouTube searched from Emacs, the videos listed with their channels and lengths, played through mpv, downloaded with yt-dlp, and saved for later."
    :icon "yeetube"
+   :banner "yeetube"
+   :about "yeetube"
+   :author "Thanos Apollo"
+   :license "GPL-3.0-or-later"
    ;; Release 2.3.1, whose tag is named 0.2.3.
    :package (yeetube :url "https://git.thanosapollo.org/yeetube"
                      :rev "4bbb5c37b77811b69b2d4483bdb7042247c587a1")
@@ -62,6 +74,10 @@
    :category utilities
    :description "Calc, Emacs's calculator: arbitrary precision, units, matrices, algebra and calculus, in reverse Polish or algebraic notation."
    :icon "calculator"
+   :banner "calculator"
+   :about "calculator"
+   :author "David Gillespie"
+   :license "GPL-3.0-or-later"
    :command calc)
 
   (calendar
@@ -71,6 +87,10 @@
    :category productivity
    :description "Emacs's calendar: months at a glance, holidays, sunrise and sunset, phases of the moon, and the diary."
    :icon "calendar"
+   :banner "calendar"
+   :about "calendar"
+   :author "Edward M. Reingold"
+   :license "GPL-3.0-or-later"
    :command calendar)
 
   (stickies
@@ -80,6 +100,10 @@
    :category productivity
    :description "Mac OS 9's Stickies: notes in seven colours over the desktop, rolled up into their title bars, kept as headings of one org file that agents read too."
    :icon "stickies"
+   :banner "stickies"
+   :about "stickies"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
    :package (lispm-stickies :url "https://github.com/LispMachineLab/lispm-stickies"
                             :rev "822cc3fbcd5eeaca4c61a1cb058a48c6eacc38ca")
    :feature lispm-stickies)
@@ -91,6 +115,10 @@
    :category utilities
    :description "Checks what agents are given to run, the MCP servers and skills of LispM, Claude Code and Codex: their settings and text against rules, skills' code read as Lisp, servers' tools pinned, packages looked up in OSV."
    :icon "security"
+   :banner "security"
+   :about "security"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
    :package (lispm-security :url "https://github.com/LispMachineLab/lispm-security"
                             :rev "6486295285c68eca1a92306f03cc60203c2b5c24")
    :command lispm-security)
@@ -102,6 +130,10 @@
    :category utilities
    :description "The vaults of 1Password through op, its command-line tool: items searched as you type, usernames, passwords and one-time codes copied and cleared from the clipboard after 90 seconds, new logins with generated passwords. Secrets are read only when used, never kept nor written to disk."
    :icon "1password"
+   :banner "1password"
+   :about "1password"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
    :package (lispm-1password :url "https://github.com/LispMachineLab/lispm-1password"
                              :rev "a72c2f1b595c3035990cb60d0e35b8c450987973")
    :command lispm-1password
@@ -116,6 +148,10 @@
    :category social
    :description "ERC, Emacs's own IRC client: the networks you are on, Libera.Chat or another, each over its channels and the people talking with you, connected to again as it opens."
    :icon "erc"
+   :banner "erc"
+   :about "erc"
+   :author "Alexander L. Belikoff"
+   :license "GPL-3.0-or-later"
    :command erc-tls)
 
   (slack
@@ -125,6 +161,10 @@
    :category social
    :description "emacs-slack: your Slack workspaces' channels and direct messages, signed in to with the token and cookie Slack's web app signs in with, which auth-source keeps."
    :icon "slack"
+   :banner "slack"
+   :about "slack"
+   :author "Yuya Minami"
+   :license "GPL-3.0-or-later"
    ;; No releases; a commit of main that was read.
    :package (slack :url "https://github.com/emacs-slack/emacs-slack"
                    :rev "8163416ce7d1074d62df764b9071d92c63fc8888")
@@ -138,6 +178,10 @@
    :category social
    :description "Telega, a Telegram client: your chats, groups and channels, with photos, stickers and voice notes, through telega-server, which it builds once from TDLib, Telegram's library."
    :icon "telega"
+   :banner "telega"
+   :about "telega"
+   :author "Zajcev Evgeny"
+   :license "GPL-3.0-or-later"
    ;; Its tags stopped at 0.8.03; a commit of master that was read.
    :package (telega :url "https://github.com/zevlg/telega.el"
                     :rev "382276c2443f644a981f67f1f2340115696453e2")
@@ -156,6 +200,10 @@
    :category games
    :description "Fit the falling blocks into whole rows, which clear, before the stack reaches the top."
    :icon "tetris"
+   :banner "tetris"
+   :about "tetris"
+   :author "Glynn Clements"
+   :license "GPL-3.0-or-later"
    :command tetris)
 
   (snake
@@ -165,6 +213,10 @@
    :category games
    :description "Steer a snake round the field to eat the fruit; it grows with each one, and the game ends when it runs into a wall or itself."
    :icon "snake"
+   :banner "snake"
+   :about "snake"
+   :author "Glynn Clements"
+   :license "GPL-3.0-or-later"
    :command snake)
 
   (pong
@@ -174,6 +226,10 @@
    :category games
    :description "The table tennis of the first video games, for two players at one keyboard."
    :icon "pong"
+   :banner "pong"
+   :about "pong"
+   :author "Benjamin Drieu"
+   :license "GPL-3.0-or-later"
    :command pong)
 
   (gomoku
@@ -183,6 +239,10 @@
    :category games
    :description "Five stones in a row on an open board, against Emacs."
    :icon "gomoku"
+   :banner "gomoku"
+   :about "gomoku"
+   :author "Philippe Schnoebelen"
+   :license "GPL-3.0-or-later"
    :command gomoku)
 
   (bubbles
@@ -192,6 +252,10 @@
    :category games
    :description "Remove groups of touching bubbles of one colour; the bigger the group, the more it scores."
    :icon "bubbles"
+   :banner "bubbles"
+   :about "bubbles"
+   :author "Ulf Jasper"
+   :license "GPL-3.0-or-later"
    :command bubbles)
 
   (5x5
@@ -201,6 +265,10 @@
    :category games
    :description "Fill every square of the grid; each move fills or empties a square and the squares beside it."
    :icon "5x5"
+   :banner "5x5"
+   :about "5x5"
+   :author "Dave Pearson"
+   :license "GPL-3.0-or-later"
    :command 5x5)
 
   (solitaire
@@ -210,6 +278,10 @@
    :category games
    :description "Jump pegs over one another to take them off the board, until one is left in the middle."
    :icon "solitaire"
+   :banner "solitaire"
+   :about "solitaire"
+   :author "Jan Schormann"
+   :license "GPL-3.0-or-later"
    :command solitaire)
 
   (blackbox
@@ -219,6 +291,10 @@
    :category games
    :description "Find the balls hidden in a black box by firing rays into it and watching where they come out."
    :icon "blackbox"
+   :banner "blackbox"
+   :about "blackbox"
+   :author "F. Thomas May"
+   :license "GPL-3.0-or-later"
    :command blackbox)
 
   (mpuz
@@ -228,6 +304,10 @@
    :category games
    :description "A multiplication written in letters: find the digit each letter stands for."
    :icon "mpuz"
+   :banner "mpuz"
+   :about "mpuz"
+   :author "Philippe Schnoebelen"
+   :license "GPL-3.0-or-later"
    :command mpuz)
 
   (hanoi
@@ -237,6 +317,10 @@
    :category games
    :description "The Towers of Hanoi, solved before your eyes: a tower of discs moved from peg to peg, never a larger disc on a smaller one."
    :icon "hanoi"
+   :banner "hanoi"
+   :about "hanoi"
+   :author "Damon Anton Permezel"
+   :license "LicenseRef-Public-Domain"
    :command hanoi)
 
   (life
@@ -246,6 +330,10 @@
    :category games
    :description "Conway's Game of Life: cells living, dying and being born, one generation after another."
    :icon "life"
+   :banner "life"
+   :about "life"
+   :author "Kyle Jones"
+   :license "GPL-3.0-or-later"
    :command life)
 
   (dunnet
@@ -255,26 +343,39 @@
    :category games
    :description "A text adventure in the manner of Zork, played by typing what to do: look, take the shovel, go east."
    :icon "dunnet"
+   :banner "dunnet"
+   :about "dunnet"
+   :author "Ron Schnell"
+   :license "GPL-3.0-or-later"
    :command dunnet)
+
+  ;; Classic AI: programs from the history of AI, ELIZA's Doctor built
+  ;; into Emacs, MYCIN and SHRDLU in Common Lisp.
 
   (doctor
    :kind app
    :name "Doctor"
    :subtitle "The psychotherapist"
-   :category games
+   :category classic-ai
    :description "ELIZA's psychotherapist, who answers what you tell it with questions of its own."
    :icon "doctor"
+   :banner "doctor"
+   :about "doctor"
+   :author "The GNU Emacs developers"
+   :license "GPL-3.0-or-later"
    :command doctor)
-
-  ;; Programs from the history of AI, in Common Lisp.
 
   (mycin
    :kind app
    :name "MYCIN"
    :subtitle "The 1970s expert system"
-   :category games
+   :category classic-ai
    :description "MYCIN, Stanford's expert system of the 1970s: it asks about a patient and the cultures taken, names the organisms likely to infect the blood with how certain it is, and says why it asks. Norvig's Common Lisp from Paradigms of AI Programming, run unchanged."
    :icon "mycin"
+   :banner "mycin"
+   :about "mycin"
+   :author "LispMachineLab, after Peter Norvig"
+   :license "AGPL-3.0-or-later AND MIT"
    :package (lispm-mycin :url "https://github.com/LispMachineLab/lispm-mycin"
                          :rev "6b6a9493a01efac7a5bc27bf5343daa5d5b8afb4")
    :command lispm-mycin
@@ -284,9 +385,13 @@
    :kind app
    :name "SHRDLU"
    :subtitle "Winograd's blocks world"
-   :category games
+   :category classic-ai
    :description "Terry Winograd's SHRDLU of 1970 talks in English about a table of blocks, pyramids and a box, and moves them with a hand, drawn as it goes. The Common Lisp port of the 1990s, run unchanged but for fixes, fetched with git on its first start."
    :icon "shrdlu"
+   :banner "shrdlu"
+   :about "shrdlu"
+   :author "LispMachineLab, after Terry Winograd"
+   :license "AGPL-3.0-or-later"
    :package (lispm-shrdlu :url "https://github.com/LispMachineLab/lispm-shrdlu"
                           :rev "8e48d34a8be2049c4d65ca32cd3841f7c03c43b5")
    :command lispm-shrdlu
@@ -301,6 +406,10 @@
    :subtitle "Nous Research's agent"
    :description "Hermes, Nous Research's agent, in the editor beside Claude Code and Codex: started in a terminal at the project, its sessions listed and resumed, and Emacs's state shown to it."
    :icon "hermes"
+   :banner "hermes"
+   :about "hermes"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
    :program "hermes"
    :install "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
    :package (lispm-hermes :url "https://github.com/LispMachineLab/lispm-hermes"
@@ -313,6 +422,10 @@
    :subtitle "Emacs Common Lisp"
    :description "Common Lisp written in Emacs Lisp, Lars Brinkhoff's emacs-cl made to run on Emacs 30 and 31: a listener, M-x emacs-cl-repl, and the Common Lisp that MYCIN and SHRDLU run on, in a batch Emacs beside yours."
    :icon "emacs-cl"
+   :banner "emacs-cl"
+   :about "emacs-cl"
+   :author "Lars Brinkhoff, LispMachineLab"
+   :license "GPL-2.0-or-later"
    :package (emacs-cl :url "https://github.com/LispMachineLab/emacs-cl"
                       :rev "62007715826889b7daaedfd27cbaa9aa864842f1")
    :feature emacs-cl)
