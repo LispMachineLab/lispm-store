@@ -79,7 +79,7 @@
    :author "Alec Resende, LispMachineLab"
    :license "GPL-3.0-only AND AGPL-3.0-or-later"
    :package (lispm-eseq :url "https://github.com/LispMachineLab/lispm-eseq"
-                        :rev "7d64e260cca072b2967eb82e08178f11a8c683f4")
+                        :rev "92f9d9c7b5d391dece1fa59a5202969b3652e379")
    :command lispm-eseq
    ;; ESeq 0.1.0 (31e088f8), its maker's disk image, signed and notarized.
    :needs ((application "ESeq" :for "making music in its own window, and checking what is made for it"
