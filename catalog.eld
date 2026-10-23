@@ -457,12 +457,13 @@
    :requires (emacs-cl)
    :needs ((program "git" :for "fetching SHRDLU's Common Lisp on its first start" :xcode t)))
 
-  ;; Extensions.
+  ;; Extensions: agents for the editor, in AI Harness, then the others.
 
   (hermes
    :kind extension
    :name "Hermes"
    :subtitle "Nous Research's agent"
+   :category ai-harness
    :description "Hermes, Nous Research's agent, in the editor beside Claude Code and Codex: started in a terminal at the project, its sessions listed and resumed, and Emacs's state shown to it."
    :icon "hermes"
    :banner "hermes"
@@ -479,6 +480,7 @@
    :kind extension
    :name "Holon"
    :subtitle "Agents that keep working"
+   :category ai-harness
    :description "Holon, open-source software that keeps AI agents at work on your own computer, in the editor beside Claude Code and Codex: an agent made for the project and opened in Holon's terminal UI, its agents listed by project and taken up again, their conversations read as transcripts."
    :icon "holon"
    :banner "holon"

@@ -126,9 +126,11 @@ uninstalled: it may run on its own, as Rotom's daemon does.
 ** Extensions
 
 An extension adds to LispM Desktop's editor instead of opening a window, as Hermes adds an agent
-beside Claude Code and Codex.  The App Store lists them under Extensions.
+beside Claude Code and Codex.  The App Store lists one bringing an agent into the editor under AI
+Harness, and the others under Extensions.
 
 | ~:subtitle~ | as an app's                                                                  |
+| ~:category~ | ~ai-harness~ for an agent in the editor; absent for the others               |
 | ~:icon~     | as an app's                                                                  |
 | ~:banner~, ~:about~, ~:author~, ~:license~ | as an app's                                   |
 | ~:package~  | ~(PACKAGE :url URL :rev SHA)~, from git, pinned as an app's is               |
@@ -141,6 +143,7 @@ beside Claude Code and Codex.  The App Store lists them under Extensions.
  :kind extension
  :name "Hermes"
  :subtitle "Nous Research's agent"
+ :category ai-harness
  :description "Hermes, Nous Research's agent, in the editor beside Claude Code and Codex: ..."
  :icon "hermes"
  :banner "hermes"
