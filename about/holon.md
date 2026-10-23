@@ -51,15 +51,18 @@ runs while LispM runs, and stops with it.
 
 ## What it needs
 
-The `holon` command on `PATH`.  The App Store does not install Holon itself: until the command is
-found, it shows the extension greyed out, with the command Holon's authors publish:
+The `holon` command, from the Homebrew tap of Holon's authors.  While it is not on `PATH`, Get
+installs it with the extension, in the Installer, which runs:
 
 ```
-brew tap holon-run/tap && brew install holon
+brew install holon-run/tap/holon
 ```
 
-Holon also comes as binaries for macOS and Linux from its releases page.  If `holon` is no longer
-there later, the extension hides itself.
+Without Homebrew, the Installer offers to install Homebrew first.  Holon also comes as binaries for
+macOS and Linux from its releases page; one already on `PATH` is used as it is.  If `holon` is gone
+later, the extension hides itself, and `M-x lispm-holon-new` or `M-x lispm-holon-setup` offers to
+install it again.  Uninstall All, uninstalling the extension, uninstalls it too when nothing else
+needs it.
 
 ## Where it comes from
 
