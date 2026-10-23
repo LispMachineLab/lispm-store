@@ -123,6 +123,22 @@
                             :rev "40d7ad784a04089a8a9c72b1853217a2719ae7af")
    :command lispm-security)
 
+  (remote
+   :kind app
+   :name "LispM Remote"
+   :subtitle "LispM from your phone"
+   :category utilities
+   :description "LispM from a phone or another computer, anywhere, over Rings Network: pair once with a QR code, then talk to its agents, answer what they wait on and work in its windows from lispm.ai/remote, sealed end to end, with no server of ours in between."
+   :icon "remote"
+   :banner "remote"
+   :about "remote"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
+   :package (lispm-remote :url "https://github.com/LispMachineLab/lispm-remote"
+                          :rev "391b1dd311dcf654ede54d1eb60b28f600f57f60"
+                          :lisp-dir "lisp")
+   :command lispm-remote)
+
   (1password
    :kind app
    :name "1Password"
