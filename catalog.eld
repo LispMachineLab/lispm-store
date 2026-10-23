@@ -492,7 +492,7 @@
   (feeds
    :kind skill
    :name "Read feeds"
-   :description "Lets agents search and read your Elfeed entries, tag them, mark them read and fetch new ones."
+   :description "Lets agents search and read your Elfeed entries, tag them, mark them read, fetch new ones and show them in Elfeed."
    :file "skills/feeds.org"
    :requires (elfeed))
 
