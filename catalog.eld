@@ -488,7 +488,7 @@
    :program "openclaw"
    :install "curl -fsSL https://openclaw.ai/install.sh | bash"
    :package (lispm-openclaw :url "https://github.com/LispMachineLab/lispm-openclaw"
-                            :rev "63870c32afaaba08895838c33605e6d5e0d0ee01")
+                            :rev "b72540af2ce2745bc1223cf798ce64e508f3e1d4")
    :feature lispm-openclaw)
 
   (emacs-cl
