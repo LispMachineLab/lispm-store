@@ -545,6 +545,58 @@ package tests with: no daemon is touched, no account signed in to."
     (should (equal lispm-model "grok-4.7"))
     (delete-directory dir t)))
 
+(ert-deftest lispm-store-test-make-for-eseq ()
+  "The ESeq skill reads where ESeq stands and its guide, makes an effect
+from one of ESeq's own and a sequencer, and checks them, the picture of
+the panel coming with the result, against the stand-in for eseq its
+package tests with, in a fake ESeq.app: ESeq is neither opened nor run."
+  (lispm-store-test--load-skills)
+  (let* ((fake (expand-file-name "test/fake-eseq" (file-name-directory (locate-library "lispm-eseq"))))
+         (root (make-temp-file "lispm-store-eseq" t))
+         (factory (expand-file-name "factory" root))
+         (application (expand-file-name "ESeq.app" root))
+         (lispm-eseq-application application)
+         (lispm-eseq--paths nil)
+         (lispm-eseq-checks (make-hash-table :test #'equal))
+         (process-environment (append (list (concat "LISPM_ESEQ_TEST_ROOT=" root)
+                                            (concat "LISPM_ESEQ_TEST_FACTORY=" factory))
+                                      process-environment))
+         (check (lambda (&rest args)
+                  (let (result)
+                    (apply (lispm-tool-function (lispm-get-tool "eseq_check"))
+                           (lambda (text &optional failed images) (setq result (list text failed images)))
+                           args)
+                    (lispm-store-test--wait (lambda () result))
+                    result))))
+    (make-directory (expand-file-name "Contents/MacOS" application) t)
+    (copy-file fake (expand-file-name "Contents/MacOS/eseq" application))
+    (set-file-modes (expand-file-name "Contents/MacOS/eseq" application) #o755)
+    (make-directory (expand-file-name "effects/stereo-tremolo" factory) t)
+    (with-temp-file (expand-file-name "effects/stereo-tremolo/dsp.lisp" factory) (insert "(dsp)\n"))
+    (with-temp-file (expand-file-name "panel.png" root))
+    (should (string-match-p "Effects go in: " (lispm-store-test--call "eseq_status")))
+    (should (string-match-p "\\`ESeq's guide, .*AGENTS\\.md:" (lispm-store-test--call "eseq_guide")))
+    (should (string-match-p "\\`stereo-tremolo: " (lispm-store-test--call "eseq_examples" "effect")))
+    (should (string-match-p "\\`Made the effect Wobble from ESeq's stereo-tremolo:\n.*/Wobble/dsp\\.lisp\\'"
+                            (lispm-store-test--call "eseq_new" "effect" "Wobble" "stereo-tremolo")))
+    (should (string-match-p "\\`Made the sequencer pulse, its kind pulse:"
+                            (lispm-store-test--call "eseq_new" "sequencer" "pulse" nil)))
+    (pcase-let ((`(,text ,failed ,images) (funcall check "effect" "Wobble" nil)))
+      (should (string-match-p "^PASS .*/Wobble$" text))
+      (should-not failed)
+      (should (equal images (list (expand-file-name "panel.png" root)))))
+    (pcase-let ((`(,text ,failed ,images) (funcall check "sequencer" "pulse.view" t)))
+      (should (string-match-p "^PASS pulse\\.view$" text))
+      (should-not failed)
+      (should-not images))
+    (with-temp-file (expand-file-name "support/effects/Wobble/dsp.lisp" root) (insert "(dsp BROKEN\n"))
+    (pcase-let ((`(,text ,failed ,_) (funcall check "effect" "Wobble" nil)))
+      (should (string-match-p "FAIL .*(dsp compile)\n\\(?:.*\n\\)*Error: Parse error: Missing closing parenthesis" text))
+      (should-not failed))
+    (should (string-match-p "Wobble, in .*, failed its last check, dsp compile"
+                            (lispm-store-test--call "eseq_status")))
+    (delete-directory root t)))
+
 ;;;; Chat
 
 (defun lispm-store-test--wait (predicate &optional seconds)

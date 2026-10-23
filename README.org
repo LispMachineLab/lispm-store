@@ -104,6 +104,8 @@ Every app and extension gives its whole listing, what its page in the App Store 
 | ~:head~      | ~t~ to install the formula's HEAD, where its release is too old                     |
 | ~:xcode~     | ~t~ for a program of Apple's command line tools, as ~git~ or ~swift~                |
 | ~:cargo~     | the crate Cargo builds a program from, for one Homebrew lacks, as ~rotom~           |
+| ~:url~       | the https address of a ~.dmg~ or ~.zip~ holding NAME.app, its maker's, for an        |
+|              | application Homebrew lacks, as ESeq; ~:sha256~, that file's SHA-256                 |
 | ~:instead~   | programs doing its work while it is missing, as ~afplay~ for ~mpv~                  |
 | ~:more~      | what it does that they do not                                                       |
 | ~:commands~  | the app's commands needing it, which offer to install it first                      |
@@ -113,8 +115,9 @@ Every app and extension gives its whole listing, what its page in the App Store 
 
 What is missing never blocks installing the app: Get installs it alongside, one install at a time
 in LispM Desktop's Installer, with Homebrew, or with Cargo, which Homebrew brings first if it is
-missing.  The catalog names formulas, casks and crates, never commands.  What Cargo built is never
-uninstalled: it may run on its own, as Rotom's daemon does.
+missing; or downloaded from its maker, then installed only if it is the very file ~:sha256~ names.
+The catalog names formulas, casks, crates and files, never commands.  What Cargo built is never
+uninstalled: it may run on its own, as Rotom's daemon does; nor is an application downloaded.
 
 #+begin_src lisp-data
 (yeetube

@@ -67,6 +67,27 @@
                                yeetube-download-video yeetube-download-videos)
                     :variables (yeetube-ytdlp-program))))
 
+  (eseq
+   :kind app
+   :name "ESeq"
+   :subtitle "Live sequencer, in Lisp"
+   :category music
+   :description "ESeq, a live sequencer and audio engine for the Mac made after Emacs, its sequencers written in a Lisp of its own and its instruments and effects in DGenLisp, compiled as it plays: what you make for it, made from its own, edited here while it plays and checked with its check, which compiles, plays a test note and draws the panel."
+   :icon "eseq"
+   :banner "eseq"
+   :about "eseq"
+   :author "Alec Resende, LispMachineLab"
+   :license "GPL-3.0-only AND AGPL-3.0-or-later"
+   :package (lispm-eseq :url "https://github.com/LispMachineLab/lispm-eseq"
+                        :rev "7d64e260cca072b2967eb82e08178f11a8c683f4")
+   :command lispm-eseq
+   ;; ESeq 0.1.0 (31e088f8), its maker's disk image, signed and notarized.
+   :needs ((application "ESeq" :for "making music in its own window, and checking what is made for it"
+                        :bundle "com.universalsequences.eseq"
+                        :url "https://github.com/universalsequences/eseq/releases/download/r3-test-31e088f8/ESeq-0.1.0-31e088f8.dmg"
+                        :sha256 "13d734e2bef2cabeb8b68fbf4fd6ddfda016e02d497ce6977de8a81d3b99bf8f"
+                        :commands (lispm-eseq-start))))
+
   (calculator
    :kind app
    :name "Calculator"
@@ -516,6 +537,13 @@
    :description "Lets agents talk with SHRDLU in English, in its window: have its hand move the blocks, and ask what is where, what it did and why."
    :file "skills/blocks-world.org"
    :requires (shrdlu))
+
+  (make-for-eseq
+   :kind skill
+   :name "Make things for ESeq"
+   :description "Lets agents make and change instruments, effects and sequencers for ESeq, following its own guide, and check each with ESeq's check, which compiles it, plays it and draws its panel, until it passes."
+   :file "skills/make-for-eseq.org"
+   :requires (eseq))
 
   (use-rotom
    :kind skill

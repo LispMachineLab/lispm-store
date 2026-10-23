@@ -1,0 +1,152 @@
+#+title: Make things for ESeq
+#+description: Make, change and check instruments, effects and sequencers for the user's ESeq, a live sequencer extended in Lisp: read where ESeq stands and its own guide, start from its examples, and check each with ESeq's check, which compiles it, plays it and draws its panel, until it passes.
+
+The user's ESeq app (the package lispm-eseq) is ESeq's side in LispM.  ESeq itself is a live
+sequencer and audio engine for the Mac, an application of its own, ESeq.app, made after Emacs.
+What the user makes for it is Lisp, written into folders of theirs, which ESeq picks up while it
+runs:
+
+- an *instrument* (a synth, a drum voice, a physical model) or an *effect*: a folder holding
+  =dsp.lisp=, its sound, in DGenLisp, which ESeq compiles to native code, and =ui.lisp=, its
+  panel, in eseqlisp;
+- a *sequencer*: Local modules of eseqlisp, ESeq's own Lisp, one with the tick that plays notes,
+  one with the panel that declares its kind with =def-kind=.
+
+Use this skill when the user asks for a new ESeq instrument, synth, drum sound, effect or
+sequencer, wants to change one they made, or asks why one fails.
+
+* Before writing anything
+
+1. ~eseq_status~: whether ESeq is installed, where instruments, effects and sequencers go,
+   what the user made already and how its last check went.  A name already taken is not used
+   again.
+2. ~eseq_guide~: ESeq's own guide.  It names the rules files for instruments, effects and
+   sequencers, the DGenLisp reference and the examples to study.  Read the rules file of what
+   you make with =read_file= before you write: they are short, strict and ESeq's own, and where
+   an older example disagrees with them, follow the rules.
+3. Study one or two of ESeq's own examples close to the request, as the guide says.  They are
+   read-only: never edit anything inside ESeq.app.
+
+* Making
+
+- ~eseq_new~ KIND NAME EXAMPLE makes a start: an instrument or effect copied from one of ESeq's
+  own, EXAMPLE, as ~eseq_examples~ lists them, into a folder named NAME, which is what the user
+  sees in ESeq's browser (=Tape Echo=, =Bass/Acid Mono=); or a sequencer, NAME in lower case,
+  whose two modules, =NAME.core= and =NAME.view=, already pass the check.  Then change its files
+  with your own tools until it does what was asked.
+- Or write the files yourself where ~eseq_status~ says, following the guide.
+- Write both files of a sequencer before checking it: ESeq loads a Local file again as it is
+  saved, and a pair half written may not load in the ESeq running.
+
+* Checking, until it passes
+
+~eseq_check~ KIND TARGET runs ESeq's own check.  An instrument or effect is compiled, played
+with a test note or signal (silence or clipping fails), and its panel drawn; a sequencer is
+read, its brackets counted, loaded, and its panel drawn.  The result says each stage, =ok=,
+=warn= or =FAIL=, and comes with the picture of the panel it drew.
+
+- On =FAIL=, the stage and the error say what to fix: fix it and check again.
+- =warn= lines are conventions worth following, not failures.
+- Look at the panel's picture every time it passes: controls overlapping or cut, empty space,
+  red =missing: <param>= labels are to be fixed too.
+- If it says ESeq's own interface failed to load, the fault is not in the files: tell the user,
+  and check with =no_render= for the rest.
+- A sequencer's tick is not run by the check: say so, and ask the user to press Play and listen.
+
+A check that passes is not the end: making sound is the job.  Choose defaults that sound good on
+the first note (moderate levels, a musical filter, a short attack).
+
+* Telling the user
+
+Say where it is in ESeq: an instrument in the browser's *Instruments* tab, under *Library*; an
+effect under *Audio FX*, *Custom*; a sequencer as *New NAME* in the rack's menu, once its module
+is loaded.  Summarize its controls and suggest settings to try.
+
+A changed =ui.lisp= or sequencer module shows in ESeq by itself.  A changed =dsp.lisp= of an
+instrument already on a track needs the user's *Edit > Reload Instrument From Disk* (for an
+effect, *Reload Selected Effect From Disk*): say so.  Keep existing parameters' names where you
+can, as projects keep knob values by name.
+
+* What only the user does
+
+Playing and listening, and the gestures in ESeq's own window.  ~eseq_open~ opens ESeq for them.
+Packages from git are installed only once they approve: ~eseq_install_package~.
+
+* The code
+
+#+begin_src emacs-lisp :lispm load
+(require 'lispm-eseq)
+
+(lispm-deftool eseq_status ()
+  "Read where ESeq stands: installed or not, its version, running or not, where instruments, effects and sequencers go, its guide, and each instrument, effect, sequencer and package made for it, with how its last check went."
+  (lispm-eseq-report))
+
+(lispm-deftool eseq_guide ()
+  "Read ESeq's own guide to making instruments, effects and sequencers: where files go, the rules files to read first, the examples to study, and the check.  Read it before writing anything for ESeq."
+  (if-let* ((guide (lispm-eseq-guide)))
+      (with-temp-buffer
+        (insert-file-contents guide)
+        (concat (format "ESeq's guide, %s:\n\n" guide) (buffer-string)))
+    (error "ESeq is not installed, so it has written no guide: the user installs it from the App Store")))
+
+(lispm-deftool eseq_examples
+    ((kind string "Whose examples to list." :enum ("instrument" "effect")))
+  "List ESeq's own instruments or effects, the examples a new one may start from, by the names eseq_new takes, with their folders."
+  (mapconcat (pcase-lambda (`(,name . ,folder)) (format "%s: %s" name folder))
+             (or (lispm-eseq-examples (intern kind)) (error "ESeq has no %ss of its own here" kind))
+             "\n"))
+
+(lispm-deftool eseq_new
+    ((kind string "What to make." :enum ("instrument" "effect" "sequencer"))
+     (name string "For an instrument or effect, its folder's name, which ESeq's browser shows, in a folder or not: \"Tape Echo\", \"Bass/Acid Mono\".  For a sequencer, lower-case letters, digits and hyphens: its modules are NAME.core and NAME.view.")
+     (example string "For an instrument or effect, the one of ESeq's own to start from, as eseq_examples names it: \"Synths/Revsynt\", \"stereo-tremolo\"." :optional t))
+  "Make a start on a new instrument or effect, a copy of one of ESeq's own in a folder of its name, or a new sequencer, a core module with its tick and a view with its panel and kind, which passes the check as made.  Returns its files, to change next."
+  :permission write
+  (pcase kind
+    ("sequencer"
+     (let ((view (lispm-eseq-new-sequencer name)))
+       (format "Made the sequencer %s, its kind %s:\n%s\n%s"
+               name name (expand-file-name "core.lisp" (file-name-directory view)) view)))
+    ((or "instrument" "effect")
+     (unless example
+       (error "Name the %s of ESeq's own to start from: eseq_examples lists them" kind))
+     (let ((folder (lispm-eseq-copy-example (intern kind) example name)))
+       (format "Made the %s %s from ESeq's %s:\n%s" kind name example
+               (mapconcat #'identity (directory-files folder t "\\.lisp\\'") "\n"))))
+    (_ (error "No such kind: %s" kind))))
+
+(lispm-deftool eseq_check
+    ((kind string "What it is." :enum ("instrument" "effect" "sequencer"))
+     (target string "An instrument's or effect's name under the user's own (\"Tape Echo\"), its folder, or a file of it; a sequencer's view module (\"pulse.view\") or a file of it.")
+     (no_render boolean "Leave the panel undrawn, as when ESeq's own interface fails to load." :optional t))
+  "Check an instrument, effect or sequencer with ESeq's own check: an instrument or effect is compiled, played with a test note or signal, failing on silence or clipping, and its panel drawn; a sequencer is read, loaded and its panel drawn.  Returns what each stage said and the picture of the panel, to look at."
+  :permission shell
+  :async t
+  (let ((kind (intern kind)))
+    (lispm-eseq-check kind (lispm-eseq-target kind target)
+                      (lambda (result)
+                        (let ((png (plist-get result :png)))
+                          ;; A check that fails is said, not a call failed.
+                          (funcall done (lispm-eseq-check-text result) nil
+                                   (and png (file-readable-p png) (list png)))))
+                      no_render)))
+
+(lispm-deftool eseq_open ()
+  "Open ESeq, the sequencer itself, in its own window, or bring it to the front, for the user to play and listen."
+  :permission shell
+  (lispm-eseq-start)
+  "ESeq is open.")
+
+(lispm-deftool eseq_install_package
+    ((package string "The package, as author/name, lower case.")
+     (url string "Its git repository's address."))
+  "Install an ESeq package from its git repository with ESeq's own installer, into ~/.eseq.d/packages.  The user approves each call."
+  :permission shell
+  :always-ask t
+  :async t
+  (lispm-eseq-install-package package url
+                              (lambda (error)
+                                (if error
+                                    (funcall done (format "%s was not installed: %s" package error) t)
+                                  (funcall done (format "Installed %s." package))))))
+#+end_src
