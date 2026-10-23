@@ -472,7 +472,7 @@
    :program "holon"
    :install "brew tap holon-run/tap && brew install holon"
    :package (lispm-holon :url "https://github.com/LispMachineLab/lispm-holon"
-                         :rev "2e5db469086d44fc400d29da9f4021ebda908df1")
+                         :rev "7d99312b404ace62bf84dd90841ff4993f5d8a76")
    :feature lispm-holon)
 
   (emacs-cl
