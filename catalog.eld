@@ -493,6 +493,22 @@
                          :rev "2997097f98becd67c65458614053ac355234d024")
    :feature lispm-holon)
 
+  (openclaw
+   :kind extension
+   :name "OpenClaw"
+   :subtitle "Answers in every chat"
+   :description "OpenClaw, the open-source personal assistant that answers wherever you chat with it, in the editor beside Claude Code and Codex: a session made in the project and opened in OpenClaw's terminal UI, your conversations with it, from the terminal, its web UI or a chat app, listed and taken up again, read as transcripts."
+   :icon "openclaw"
+   :banner "openclaw"
+   :about "openclaw"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
+   :program "openclaw"
+   :install "curl -fsSL https://openclaw.ai/install.sh | bash"
+   :package (lispm-openclaw :url "https://github.com/LispMachineLab/lispm-openclaw"
+                            :rev "b72540af2ce2745bc1223cf798ce64e508f3e1d4")
+   :feature lispm-openclaw)
+
   (emacs-cl
    :kind extension
    :name "Common Lisp"
