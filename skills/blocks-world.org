@@ -1,0 +1,82 @@
+#+title: Talk with SHRDLU
+#+description: Talk in English with SHRDLU, Terry Winograd's program of 1970, about its table of blocks, pyramids and a box: have its hand move them, and ask what is where, what it did and why.
+
+SHRDLU is the program Terry Winograd wrote at MIT in 1968-1970.  It understands English about a
+small world on a table, blocks and pyramids of a few colours and sizes and a box, and moves them
+with a hand.  The App Store's SHRDLU runs the Common Lisp port of the 1990s in a dialogue window
+above a drawing of the world.  This skill lets you talk with it: what you say goes into that
+dialogue, where the user reads it, and the hand moves in the drawing as SHRDLU carries it out.
+
+* Talking
+
+- ~shrdlu_say~ SENTENCE: say one sentence to SHRDLU and get its answer.  SHRDLU's window opens.
+  The first time, SHRDLU is fetched and loaded, which takes a few seconds, more the very first
+  time.  The hand goes on moving after the answer comes.
+- ~shrdlu_new~: a new dialogue, the blocks back where they began and SHRDLU's memory of the
+  dialogue gone.
+
+~shrdlu_say~ is of the permission class ~comm~: SHRDLU is another agent you talk to, and changes
+nothing but its own table.
+
+* SHRDLU's English
+
+Say one sentence at a time, lower case is fine, in the words of Winograd's dialogue of 1972.  A
+question ends with a question mark; a sentence without an end gets a full stop.
+
+- Commands: "pick up a big red block.", "grasp the pyramid.", "put the big red block in the
+  box.", "stack up two pyramids.", "put the littlest pyramid on top of it."
+- Questions: "what does the box contain?", "what is the pyramid supported by?", "how many blocks
+  are not in the box?", "is there a large block behind a pyramid?", "can a pyramid support a
+  pyramid?"
+- About what it did: "had you touched any pyramid before you put the green one on the little
+  cube?", "when did you pick it up?", "why?", "how did you do it?"
+
+Put what the user asks in those words: "move the red one into the box" becomes "put the big red
+block in the box."  The code that survives lost some of SHRDLU's words (own, mine, ...): when it
+says it does not understand, say it again more plainly.  When SHRDLU asks which one you mean,
+answer with ~shrdlu_say~ too.  Tell the user what SHRDLU answered in its own words.
+
+* The code
+
+#+begin_src emacs-lisp :lispm load
+(require 'lispm-shrdlu)
+
+(defvar lispm-blocks-world-timeout 300
+  "Seconds shrdlu_say waits for SHRDLU's answer: its first start fetches
+and loads it.")
+
+(defun lispm-blocks-world-show (buffer)
+  "Show SHRDLU's dialogue, BUFFER: in SHRDLU's window of LispM Desktop,
+where the App Store installed it, else in another window."
+  (unless (and (fboundp 'lispm-desktop-store-open)
+               (ignore-errors (lispm-desktop-store-open 'shrdlu) t))
+    (display-buffer buffer '(nil (inhibit-same-window . t)))))
+
+(lispm-deftool shrdlu_say
+    ((sentence string "One English sentence, as in SHRDLU's dialogue: \"pick up a big red block.\", \"what does the box contain?\"."))
+  "Say a sentence to SHRDLU, Winograd's blocks-world program of 1970, in its window; return its answer."
+  :permission comm
+  :async t
+  (let* ((answered nil)
+         (timer nil)
+         (answer (lambda (text &optional problem)
+                   (unless answered
+                     (setq answered t)
+                     (when timer
+                       (cancel-timer timer))
+                     (cond (problem (funcall done problem t))
+                           ((string-empty-p text) (funcall done "SHRDLU said nothing."))
+                           (t (funcall done (concat "SHRDLU: " text))))))))
+    (lispm-blocks-world-show (lispm-shrdlu-ask sentence answer))
+    (setq timer (run-at-time lispm-blocks-world-timeout nil answer nil
+                             "SHRDLU has not answered yet; its window shows how far it got."))))
+
+(lispm-deftool shrdlu_new ()
+  "Start a new dialogue with SHRDLU, the blocks back where they began."
+  :permission comm
+  ;; It shows the dialogue in the selected window: not the agent's.
+  (save-window-excursion
+    (lispm-shrdlu-new))
+  (lispm-blocks-world-show (get-buffer lispm-shrdlu-buffer-name))
+  "A new dialogue began; SHRDLU is loading.")
+#+end_src

@@ -105,7 +105,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-stickies :url "https://github.com/LispMachineLab/lispm-stickies"
-                            :rev "822cc3fbcd5eeaca4c61a1cb058a48c6eacc38ca")
+                            :rev "f0e1a45a7070c99ad5722ed208774547cec577d6")
    :feature lispm-stickies)
 
   (security
@@ -436,7 +436,7 @@
    :author "LispMachineLab, after Terry Winograd"
    :license "AGPL-3.0-or-later"
    :package (lispm-shrdlu :url "https://github.com/LispMachineLab/lispm-shrdlu"
-                          :rev "242825867177b6857a7476fbd20c53dabef5c19f")
+                          :rev "4474eb5bfa9a12a04b801155473a19637e935fd7")
    :command lispm-shrdlu
    :requires (emacs-cl)
    :needs ((program "git" :for "fetching SHRDLU's Common Lisp on its first start" :xcode t)))
@@ -502,6 +502,20 @@
    :description "Lets agents find, play, pause and skip music with EMMS, and say what is playing."
    :file "skills/music.org"
    :requires (emms))
+
+  (sticky-notes
+   :kind skill
+   :name "Stick notes"
+   :description "Lets agents list and read your notes in Stickies, stick a new one on the desktop and change a note's text or colour, each once you approve it."
+   :file "skills/sticky-notes.org"
+   :requires (stickies))
+
+  (blocks-world
+   :kind skill
+   :name "Talk with SHRDLU"
+   :description "Lets agents talk with SHRDLU in English, in its window: have its hand move the blocks, and ask what is where, what it did and why."
+   :file "skills/blocks-world.org"
+   :requires (shrdlu))
 
   (use-rotom
    :kind skill

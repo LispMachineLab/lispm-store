@@ -411,6 +411,72 @@ every tool it defines, defined where LispM Agent's index sees it."
           (should (string-match-p "\\`Stopped: " (lispm-store-test--call "music_control" "stop" nil))))
       (emms-stop))))
 
+(ert-deftest lispm-store-test-sticky-notes ()
+  "The notes skill sticks a note up, reads, lists, rewrites and colours
+Stickies' notes, which are written to their file."
+  (lispm-store-test--load-skills)
+  (let ((lispm-stickies-file (expand-file-name "stickies.org" lispm-store-test--work))
+        (lispm-stickies--notes nil)
+        (lispm-stickies--loaded nil))
+    ;; No windows in a batch Emacs.
+    (cl-letf (((symbol-function 'lispm-stickies--show) #'ignore)
+              ((symbol-function 'lispm-stickies--new-geometry) (lambda (_) '(60 60 240 160))))
+      (unwind-protect
+          (progn
+            (should (equal (lispm-store-test--call "stickies_list") "There are no notes."))
+            (let* ((added (lispm-store-test--call "stickies_add" "Call Sam at 5\nabout the film" "Pink"))
+                   (id (and (string-match "\\`Stuck a note on the desktop: \\([^ ]+\\)  pink  Call Sam at 5  "
+                                          added)
+                            (match-string 1 added))))
+              (should id)
+              (should (equal (lispm-store-test--call "stickies_read" id) "Call Sam at 5\nabout the film"))
+              (should (string-match-p (concat "\\`" (regexp-quote id) "  pink  Call Sam at 5  (changed ")
+                                      (lispm-store-test--call "stickies_list")))
+              (should (string-match-p "  pink  Call Sam at 6  "
+                                      (lispm-store-test--call "stickies_edit" id "Call Sam at 6")))
+              (should (string-match-p "  black-and-white  Call Sam at 6  "
+                                      (lispm-store-test--call "stickies_color" id "Black & White")))
+              (should-error (lispm-store-test--call "stickies_color" id "mauve"))
+              ;; No colour is no change, not nil written.
+              (should-error (lispm-store-test--call "stickies_color" id " "))
+              (should-error (lispm-store-test--call "stickies_read" "none"))
+              (should-error (lispm-store-test--call "stickies_edit" "none" "Hello"))
+              (lispm-stickies-quit)
+              (should (equal (mapcar (lambda (note) (list (plist-get note :id) (plist-get note :text)
+                                                          (plist-get note :color)))
+                                     (lispm-stickies-notes))
+                             (list (list id "Call Sam at 6" 'black-and-white))))))
+        (let ((lispm-stickies--quitting t))
+          (mapc #'kill-buffer (seq-filter #'buffer-live-p lispm-stickies--notes)))))))
+
+(ert-deftest lispm-store-test-blocks-world ()
+  "The SHRDLU skill says sentences to SHRDLU, fetched and loaded for the
+first, and gives back its answers; a new dialogue puts the blocks back."
+  (lispm-store-test--load-skills)
+  (let ((lispm-shrdlu-source-directory (expand-file-name "shrdlu/" lispm-store-test--work))
+        (emacs-cl-build-directory (expand-file-name "emacs-cl/" lispm-store-test--work)))
+    (cl-flet ((say (sentence)
+                ;; The first start fetches SHRDLU and builds Emacs Common Lisp.
+                (let (result (deadline (+ (float-time) 600)))
+                  (funcall (lispm-tool-function (lispm-get-tool "shrdlu_say"))
+                           (lambda (value &optional failed) (setq result (list value failed)))
+                           sentence)
+                  (while (and (not result) (< (float-time) deadline))
+                    (accept-process-output nil 0.2))
+                  (should result)
+                  (should-not (nth 1 result))
+                  (car result))))
+      (unwind-protect
+          (save-window-excursion
+            (should (equal (say "pick up a big red block") "SHRDLU: Ok."))
+            (should (equal (say "what does the box contain?") "SHRDLU: The blue pyramid."))
+            (should (string-match-p "\\`A new dialogue began" (lispm-store-test--call "shrdlu_new")))
+            (should (equal (say "is the big red block in the box?") "SHRDLU: No.")))
+        (when-let* ((buffer (get-buffer lispm-shrdlu-buffer-name))
+                    (process (get-buffer-process buffer)))
+          (set-process-sentinel process #'ignore)
+          (delete-process process))))))
+
 (ert-deftest lispm-store-test-check-security ()
   "The security skill scans, lists and explains the findings, and looks up
 in OSV only when the user lets it."
