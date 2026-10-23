@@ -106,15 +106,17 @@ Every app and extension gives its whole listing, what its page in the App Store 
 | ~:cargo~     | the crate Cargo builds a program from, for one Homebrew lacks, as ~rotom~           |
 | ~:instead~   | programs doing its work while it is missing, as ~afplay~ for ~mpv~                  |
 | ~:more~      | what it does that they do not                                                       |
-| ~:commands~  | the app's commands needing it, which offer to install it first                      |
-| ~:variables~ | the app's options holding it, set again once it is installed                        |
+| ~:commands~  | its commands needing it, which offer to install it first                            |
+| ~:variables~ | its options holding it, set again once it is installed                              |
 | ~:file~      | a library's file, under its formula's prefix                                        |
 | ~:bundle~    | an application's bundle identifier                                                  |
 
-What is missing never blocks installing the app: Get installs it alongside, one install at a time
-in LispM Desktop's Installer, with Homebrew, or with Cargo, which Homebrew brings first if it is
-missing.  The catalog names formulas, casks and crates, never commands.  What Cargo built is never
-uninstalled: it may run on its own, as Rotom's daemon does.
+What is missing never blocks installing the app, nor an extension with needs of its own: Get
+installs it alongside, one install at a time in LispM Desktop's Installer, with Homebrew, or with
+Cargo, which Homebrew brings first if it is missing.  The catalog names formulas, casks and
+crates, never commands; a tap's formula is named in full, as ~holon-run/tap/holon~, and Homebrew
+taps it first.  What Cargo built is never uninstalled: it may run on its own, as Rotom's daemon
+does.
 
 #+begin_src lisp-data
 (yeetube
@@ -135,7 +137,8 @@ Harness, and the others under Extensions.
 | ~:banner~, ~:about~, ~:author~, ~:license~ | as an app's                                   |
 | ~:package~  | ~(PACKAGE :url URL :rev SHA)~, from git, pinned as an app's is               |
 | ~:feature~  | the library that, loaded, makes it take part; unloaded, it takes part no more |
-| ~:program~  | optional: the program it needs on ~PATH~; without it the App Store greys it out |
+| ~:needs~    | optional: as an app's, installed with it, as Holon's ~holon~                  |
+| ~:program~  | optional: a program no need installs, as Hermes's; greyed out until on ~PATH~ |
 | ~:install~  | optional: the command installing ~:program~, which the App Store shows        |
 
 #+begin_src lisp-data

@@ -202,16 +202,22 @@ package, which loads more of it than its autoloads."
                      (list id t))))))
 
 (ert-deftest lispm-store-test-needs-name-the-apps-own ()
-  "The commands and options an app's needs name are its own: commands
-once its package is installed, options once it is loaded.  In a new
-Emacs, as after a restart."
+  "The commands and options the needs of an app or an extension name are
+its own: an app's commands once its package is installed, an
+extension's once it is loaded beside LispM Desktop, and options once it
+is loaded.  In a new Emacs, as after a restart."
   (lispm-store-test--install)
-  (pcase-dolist (`(,id . ,item) (lispm-store-test--of-kind 'app))
-    (let ((package (plist-get item :package)))
+  (pcase-dolist (`(,id . ,item) (append (lispm-store-test--of-kind 'app)
+                                        (lispm-store-test--of-kind 'extension)))
+    (let ((package (plist-get item :package))
+          (loaded (if (eq (plist-get item :kind) 'extension)
+                      `(progn (setq load-path (append ',(lispm-store-test--desktop) load-path))
+                              (require ',(plist-get item :feature)))
+                    t)))
       (dolist (need (plist-get item :needs))
         (let ((properties (cddr need)))
           (dolist (command (plist-get properties :commands))
-            (should (equal (list id command (lispm-store-test--emacs `(commandp ',command)))
+            (should (equal (list id command (lispm-store-test--emacs `(progn ,loaded (commandp ',command))))
                            (list id command t))))
           (dolist (variable (plist-get properties :variables))
             (should (equal (list id variable

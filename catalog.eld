@@ -487,8 +487,8 @@
    :about "holon"
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
-   :program "holon"
-   :install "brew tap holon-run/tap && brew install holon"
+   :needs ((program "holon" :for "running Holon's agents" :brew "holon-run/tap/holon"
+                    :commands (lispm-holon-new lispm-holon-setup)))
    :package (lispm-holon :url "https://github.com/LispMachineLab/lispm-holon"
                          :rev "2997097f98becd67c65458614053ac355234d024")
    :feature lispm-holon)
