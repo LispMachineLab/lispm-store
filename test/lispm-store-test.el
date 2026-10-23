@@ -315,7 +315,7 @@ every tool it defines, defined where LispM Agent's index sees it."
   "A feed of two entries, one of them a podcast's.")
 
 (ert-deftest lispm-store-test-feeds ()
-  "The feeds skill fetches, finds, reads and tags Elfeed's entries."
+  "The feeds skill fetches, finds, reads, tags and shows Elfeed's entries."
   (lispm-store-test--load-skills)
   (let* ((feed (expand-file-name "feed.xml" lispm-store-test--work))
          (elfeed-db-directory (expand-file-name "elfeed" lispm-store-test--work))
@@ -344,6 +344,30 @@ every tool it defines, defined where LispM Agent's index sees it."
                               (lispm-store-test--call "feeds_search" "-unread" nil)))
       (should (string-match-p "\\`No entries match"
                               (lispm-store-test--call "feeds_search" "+unread lambda" nil)))
+      ;; Shown to the user in another window, narrowed; an entry opened.
+      (save-window-excursion
+        (should (equal (lispm-store-test--call "feeds_show" "+starred" nil)
+                       "Elfeed lists 1 entry of the filter \"+starred\"."))
+        (should (get-buffer-window (elfeed-search-buffer)))
+        (should (equal (lispm-store-test--call "feeds_show" nil (car keys))
+                       "Elfeed shows the entry Lambda the ultimate."))
+        (should (get-buffer-window "*elfeed-entry*"))
+        (should-error (lispm-store-test--call "feeds_show" "+starred" (car keys)))
+        (should-error (lispm-store-test--call "feeds_show" nil "0000000000")))
+      ;; In LispM Desktop, in Elfeed's window: an entry shown there, then
+      ;; a filter, which puts the list back in it.
+      (save-window-excursion
+        (dlet ((lispm-desktop-store-installed '((elfeed :kind app))))
+         (let ((elfeed-window (split-window)))
+          (cl-letf (((symbol-function 'lispm-desktop-store-open) #'ignore)
+                    ((symbol-function 'lispm-desktop-app-window-frame) (lambda (_) (selected-frame))))
+            (select-window elfeed-window)
+            (lispm-store-test--call "feeds_show" nil (car keys))
+            (should (equal (buffer-name (window-buffer elfeed-window)) "*elfeed-entry*"))
+            (should (equal (lispm-store-test--call "feeds_show" "-unread" nil)
+                           "Elfeed lists 1 entry of the filter \"-unread\"."))
+            (should (eq (window-buffer elfeed-window) (elfeed-search-buffer)))
+            (should (equal (with-current-buffer (elfeed-search-buffer) elfeed-search-filter) "-unread"))))))
       ;; Saved, and found again by a key no tool gave in this Emacs.
       (should (file-exists-p (expand-file-name "index" elfeed-db-directory)))
       (clrhash lispm-feeds--keys)
@@ -481,6 +505,43 @@ in OSV only when the user lets it."
         (should-not (string-match-p "\\[medium\\]" (lispm-store-test--call "security_findings" "high" nil)))
         (should (string-match-p "\\`Not looked up: looking up is turned off"
                                 (lispm-store-test--call-async "security_look_up")))))))
+
+;;;; Rotom
+
+(ert-deftest lispm-store-test-use-rotom ()
+  "The Rotom skill reads Rotom, renews its tokens, restarts its daemon and
+chooses LispM's model, against the stand-ins for rotom and curl its
+package tests with: no daemon is touched, no account signed in to."
+  (lispm-store-test--load-skills)
+  (let* ((fakes (expand-file-name "test/" (file-name-directory (locate-library "lispm-rotom"))))
+         (dir (make-temp-file "lispm-store-rotom" t))
+         (process-environment (cons (concat "FAKE_ROTOM_DIR=" dir) process-environment))
+         (lispm-rotom-program (expand-file-name "fake-rotom" fakes))
+         (lispm-rotom-curl-program (expand-file-name "fake-curl" fakes))
+         (lispm-rotom-directory (expand-file-name "home/" dir))
+         (lispm-rotom-config nil)
+         (lispm-rotom-daemon nil)
+         (custom-file (expand-file-name "custom.el" dir))
+         (user-init-file (expand-file-name "init.el" dir))
+         (lispm-backend nil)
+         (lispm-model nil))
+    (dolist (file '("installed" "running"))
+      (with-temp-file (expand-file-name file dir)))
+    (with-temp-file (expand-file-name "accounts" dir) (insert "codex\ngrok\n"))
+    (let ((status (lispm-store-test--call-async "rotom_status")))
+      (should (string-match-p "Its daemon runs at http://127.0.0.1:14550" status))
+      (should (string-match-p "- Grok (xAI) (grok): signed in, token for 3 hours" status))
+      (should (string-match-p "- Kiro (kiro): not signed in" status)))
+    (should (string-match-p "\\`Grok (xAI) (grok), signed in:\n- grok-4.7"
+                            (lispm-store-test--call-async "rotom_models" "grok")))
+    (should (string-match-p "has written no log" (lispm-store-test--call "rotom_log" nil)))
+    (should (string-match-p "\\`refreshed Codex credentials" (lispm-store-test--call-async "rotom_refresh" "codex")))
+    (should (string-match-p "Its daemon runs" (lispm-store-test--call-async "rotom_daemon" "restart")))
+    (should (string-match-p "now use grok-4.7 through Rotom's Chat Completions side"
+                            (lispm-store-test--call-async "rotom_use" "grok-4.7" nil)))
+    (should (eq lispm-backend 'rotom))
+    (should (equal lispm-model "grok-4.7"))
+    (delete-directory dir t)))
 
 ;;;; Chat
 

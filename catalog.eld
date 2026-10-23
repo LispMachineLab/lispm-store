@@ -139,6 +139,22 @@
    :command lispm-1password
    :needs ((program "op" :for "reading your vaults" :cask "1password-cli")))
 
+  (rotom
+   :kind app
+   :name "Rotom"
+   :subtitle "Your models, one address"
+   :category utilities
+   :description "Rotom, a gateway on this machine to the models of the accounts you have, a ChatGPT plan through OpenAI's Codex, xAI's Grok, Kiro, Vercel's AI Gateway, for any program speaking OpenAI's API or Anthropic's, LispM's agents among them, with no API key of its own: its daemon started and stopped, accounts signed in to in the browser, the models listed, and one chosen for LispM's agents."
+   :icon "rotom"
+   :banner "rotom"
+   :about "rotom"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
+   :package (lispm-rotom :url "https://github.com/LispMachineLab/lispm-rotom"
+                         :rev "8cf9821033b43f0e69b7f8a7513cc3c73bab763a")
+   :command lispm-rotom
+   :needs ((program "rotom" :for "reaching the models of your accounts" :cargo "rotom")))
+
   ;; To chat with.
 
   (erc
@@ -476,7 +492,7 @@
   (feeds
    :kind skill
    :name "Read feeds"
-   :description "Lets agents search and read your Elfeed entries, tag them, mark them read and fetch new ones."
+   :description "Lets agents search and read your Elfeed entries, tag them, mark them read, fetch new ones and show them in Elfeed."
    :file "skills/feeds.org"
    :requires (elfeed))
 
@@ -500,6 +516,13 @@
    :description "Lets agents talk with SHRDLU in English, in its window: have its hand move the blocks, and ask what is where, what it did and why."
    :file "skills/blocks-world.org"
    :requires (shrdlu))
+
+  (use-rotom
+   :kind skill
+   :name "Use Rotom"
+   :description "Lets agents read where Rotom stands, its daemon, accounts, models and log, renew its tokens, start or restart its daemon and choose the model LispM's agents use; signing in stays yours."
+   :file "skills/use-rotom.org"
+   :requires (rotom))
 
   (check-security
    :kind skill
