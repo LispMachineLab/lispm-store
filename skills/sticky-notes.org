@@ -115,8 +115,12 @@ first line, last change."
   "Change a note's colour, and bring the note in front."
   :permission write
   :targets #'lispm-sticky-notes--file
-  (let ((buffer (lispm-sticky-notes-note id)))
-    (lispm-stickies-set-color (lispm-sticky-notes-color color) buffer)
+  ;; The colour is checked before the note is looked up, which loads
+  ;; Stickies: a wrong one changes nothing.
+  (let* ((key (or (lispm-sticky-notes-color color)
+                  (error "Name a colour: yellow, blue, green, pink, purple, gray or black-and-white")))
+         (buffer (lispm-sticky-notes-note id)))
+    (lispm-stickies-set-color key buffer)
     (lispm-stickies-show-note buffer)
     (format "Changed: %s" (lispm-sticky-notes-described id))))
 #+end_src

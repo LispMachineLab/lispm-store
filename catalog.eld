@@ -105,7 +105,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-stickies :url "https://github.com/LispMachineLab/lispm-stickies"
-                            :rev "8eef5f6186db7dd5ea65179c6e6e607a22167dc4")
+                            :rev "f0e1a45a7070c99ad5722ed208774547cec577d6")
    :feature lispm-stickies)
 
   (security
@@ -436,7 +436,7 @@
    :author "LispMachineLab, after Terry Winograd"
    :license "AGPL-3.0-or-later"
    :package (lispm-shrdlu :url "https://github.com/LispMachineLab/lispm-shrdlu"
-                          :rev "6844a737f227982c5cfe1bc209cca53a1a619ceb")
+                          :rev "4474eb5bfa9a12a04b801155473a19637e935fd7")
    :command lispm-shrdlu
    :requires (emacs-cl)
    :needs ((program "git" :for "fetching SHRDLU's Common Lisp on its first start" :xcode t)))

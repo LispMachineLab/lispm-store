@@ -437,6 +437,8 @@ Stickies' notes, which are written to their file."
               (should (string-match-p "  black-and-white  Call Sam at 6  "
                                       (lispm-store-test--call "stickies_color" id "Black & White")))
               (should-error (lispm-store-test--call "stickies_color" id "mauve"))
+              ;; No colour is no change, not nil written.
+              (should-error (lispm-store-test--call "stickies_color" id " "))
               (should-error (lispm-store-test--call "stickies_read" "none"))
               (should-error (lispm-store-test--call "stickies_edit" "none" "Hello"))
               (lispm-stickies-quit)
