@@ -459,6 +459,22 @@
                           :rev "5078fdb1916ace4ce07028b3de09ac7e66b43167")
    :feature lispm-hermes)
 
+  (holon
+   :kind extension
+   :name "Holon"
+   :subtitle "Agents that keep working"
+   :description "Holon, open-source software that keeps AI agents at work on your own computer, in the editor beside Claude Code and Codex: an agent made for the project and opened in Holon's terminal UI, its agents listed by project and taken up again, their conversations read as transcripts."
+   :icon "holon"
+   :banner "holon"
+   :about "holon"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
+   :program "holon"
+   :install "brew tap holon-run/tap && brew install holon"
+   :package (lispm-holon :url "https://github.com/LispMachineLab/lispm-holon"
+                         :rev "7d99312b404ace62bf84dd90841ff4993f5d8a76")
+   :feature lispm-holon)
+
   (emacs-cl
    :kind extension
    :name "Common Lisp"
