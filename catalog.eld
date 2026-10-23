@@ -497,6 +497,7 @@
    :kind extension
    :name "OpenClaw"
    :subtitle "Answers in every chat"
+   :category ai-harness
    :description "OpenClaw, the open-source personal assistant that answers wherever you chat with it, in the editor beside Claude Code and Codex: a session made in the project and opened in OpenClaw's terminal UI, your conversations with it, from the terminal, its web UI or a chat app, listed and taken up again, read as transcripts."
    :icon "openclaw"
    :banner "openclaw"
