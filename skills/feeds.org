@@ -32,8 +32,8 @@ over that database, and the functions behind them for ~eval_elisp~.
 * Showing them to the user
 
 - ~feeds_show~: open Elfeed for the user, its list of entries narrowed to FILTER when given (the
-  filter feeds_search took, to show what you found), or with ENTRY, a key, that entry.  In
-  LispM Desktop it shows in Elfeed's window.
+  filter feeds_search took, to show what you found), or instead, with ENTRY, a key, that entry.
+  In LispM Desktop it shows in Elfeed's window.
 
 With ~eval_elisp~: ~(browse-url (elfeed-entry-link (lispm-feeds-entry KEY)))~ opens an entry's
 page.
@@ -116,12 +116,16 @@ KEY is one the tools gave, as feeds_search does."
           (t (string-trim content)))))
 
 (defun lispm-feeds-show-window ()
-  "Show Elfeed's list of entries: in Elfeed's window of LispM Desktop,
-where the App Store installed it, else in another window than the
-selected one.  Return the window, or nil."
+  "Show Elfeed's list of entries and return its window: Elfeed's window of
+LispM Desktop, where its App Store installed Elfeed, the list put back in
+it if an entry was shown there; else another window than the selected one."
   (if (and (fboundp 'lispm-desktop-store-open)
-           (ignore-errors (lispm-desktop-store-open 'elfeed) t))
-      (get-buffer-window (elfeed-search-buffer) t)
+           (assq 'elfeed (bound-and-true-p lispm-desktop-store-installed)))
+      (progn
+        (lispm-desktop-store-open 'elfeed)
+        (with-selected-window (frame-selected-window (lispm-desktop-app-window-frame 'elfeed))
+          (elfeed)
+          (selected-window)))
     (save-window-excursion (elfeed))
     (display-buffer (elfeed-search-buffer) '(nil (inhibit-same-window . t)))))
 
@@ -179,9 +183,14 @@ selected one.  Return the window, or nil."
     ((filter string "An Elfeed filter whose entries the list shows, as for feeds_search." :optional t)
      (entry string "Instead, the key of an entry to open, as feeds_search gives it." :optional t))
   "Show the user Elfeed: its list of entries, narrowed to FILTER, or one entry."
-  (let ((window (lispm-feeds-show-window)))
-    (if entry
-        (let ((found (lispm-feeds-entry entry)))
+  (when (and filter entry)
+    (error "Give a filter to list, or an entry to show, not both"))
+  ;; What is wrong fails before anything is shown.
+  (let* ((found (and entry (lispm-feeds-entry entry)))
+         (count (and filter (length (elfeed-search-entries filter))))
+         (window (lispm-feeds-show-window)))
+    (if found
+        (progn
           (if (window-live-p window)
               (with-selected-window window (elfeed-show-entry found))
             (let ((elfeed-show-entry-switch #'display-buffer))
@@ -190,8 +199,9 @@ selected one.  Return the window, or nil."
       (with-current-buffer (elfeed-search-buffer)
         (when filter
           (elfeed-search-set-filter filter))
-        (format "Elfeed lists the %d entries of the filter %S."
-                (length (elfeed-search-entries elfeed-search-filter)) elfeed-search-filter)))))
+        (let ((count (or count (length (elfeed-search-entries elfeed-search-filter)))))
+          (format "Elfeed lists %d %s of the filter %S." count (if (= count 1) "entry" "entries")
+                  elfeed-search-filter))))))
 
 (lispm-deftool feeds_tag
     ((entries array "Keys of the entries, as feeds_search gives them." :items ((type . "string")))
