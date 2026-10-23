@@ -36,6 +36,19 @@ stops it.  Holon's web interface, at `http://localhost:7878`, shows the same age
 Removing the extension in the App Store takes Holon out of the editor straight away; its agents
 remain in Holon.
 
+## In LispM's sandbox
+
+Holon runs its agents' commands as you, with nothing confining them.  LispM can run Holon's
+daemon in its own sandbox instead: in Control Panels, Startup, choose **Add…**, then **Service of
+an installed package**, **Holon**, and a sandbox level.  LispM then starts Holon's daemon at every
+start, in place of Holon's own, and every command of Holon's agents runs in the sandbox too.
+
+On top of the level's rules, the daemon may read and write Holon's home and the projects you
+started Holon agents in, use its own socket and local port, and reach the model providers Holon
+has credentials for.  It cannot read your secrets, such as `~/.ssh`, nor write elsewhere.  A new
+project starts the daemon again first, so that it may write there.  The daemon in the sandbox
+runs while LispM runs, and stops with it.
+
 ## What it needs
 
 The `holon` command on `PATH`.  The App Store does not install Holon itself: until the command is
