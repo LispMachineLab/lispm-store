@@ -490,7 +490,7 @@
    :needs ((program "holon" :for "running Holon's agents" :brew "holon-run/tap/holon"
                     :commands (lispm-holon-new lispm-holon-setup)))
    :package (lispm-holon :url "https://github.com/LispMachineLab/lispm-holon"
-                         :rev "2997097f98becd67c65458614053ac355234d024")
+                         :rev "a1c24c70558717a7311323ca20e894042b3bca8d")
    :feature lispm-holon)
 
   (openclaw
@@ -507,7 +507,7 @@
    :program "openclaw"
    :install "curl -fsSL https://openclaw.ai/install.sh | bash"
    :package (lispm-openclaw :url "https://github.com/LispMachineLab/lispm-openclaw"
-                            :rev "b72540af2ce2745bc1223cf798ce64e508f3e1d4")
+                            :rev "6a1c29843110738f72be2fbd4bbfedb6e5d3dfdd")
    :feature lispm-openclaw)
 
   (emacs-cl

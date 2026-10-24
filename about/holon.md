@@ -36,6 +36,20 @@ stops it.  Holon's web interface, at `http://localhost:7878`, shows the same age
 Removing the extension in the App Store takes Holon out of the editor straight away; its agents
 remain in Holon.
 
+## With the other agents
+
+With LispM Agent 0.8.0 or later, a Holon agent open in a terminal works with the other agents:
+LispM's own, and Claude Code, Codex, Hermes and OpenClaw.
+
+- What they send it, as `[Message from codex]` or `[Request R1 from claude]`, reaches it through
+  Holon's daemon, as a message from you.  An agent at work takes it into what it is doing; one at
+  rest starts on it.  Holon's terminal UI shows it as it comes.
+- The agent lists the others, messages them, asks them for things and answers their requests,
+  and finds and uses LispM's skills and tools, with the command `lispm-tool` in its shell.  A
+  skill, `lispm`, put among the agent's own skills while its terminal is open, tells it how.
+- A LispM tool that changes something waits for your approval in the editor, as it does for
+  LispM's own agents.  In LispM's sandbox, the agent may run `lispm-tool` too.
+
 ## In LispM's sandbox
 
 Holon runs its agents' commands as you, with nothing confining them.  LispM can run Holon's

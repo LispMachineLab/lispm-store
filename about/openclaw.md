@@ -37,6 +37,21 @@ for the Gateway's default agent.
 Removing the extension in the App Store takes OpenClaw out of the editor straight away; your
 conversations remain in the Gateway.
 
+## With the other agents
+
+With LispM Agent 0.8.0 or later, an OpenClaw session open in a terminal works with the other
+agents: LispM's own, and Claude Code, Codex, Hermes and Holon.
+
+- What they send it, as `[Message from codex]` or `[Request R1 from claude]`, reaches it through
+  the Gateway as your next message, after what it is doing.  The terminal UI shows it.
+- With the Gateway on this computer, the session lists the others, messages them, asks them for
+  things and answers their requests, and finds and uses LispM's skills and tools.  They come to
+  it as an MCP server of its own among the Gateway's, `lispm_…`, which is on for that session
+  alone and taken away when the terminal closes.  A LispM tool that changes something waits for
+  your approval in the editor.
+- With the Gateway on another computer, which cannot reach the editor, the session gets no tools.
+  It still takes messages, and its final reply to a request is its answer.
+
 ## What it needs
 
 The `openclaw` command on `PATH`.  The App Store does not install OpenClaw itself: until the
