@@ -33,7 +33,7 @@ ID is a lower-case symbol unique in the catalog.  Every item has:
 | ~:kind~        | ~app~, ~extension~, ~role~ or ~skill~                                             |
 | ~:name~        | the name the store shows                                                          |
 | ~:description~ | what it is, one line                                                              |
-| ~:requires~    | optional: IDs of items to install first, such as the app a skill drives           |
+| ~:requires~    | optional: IDs of items to install first: a skill's app, an app's ~lispm-kit~      |
 | ~:emacs~       | optional: the lowest major version of Emacs it runs in, as ~32~; older ones list it, but do not install it |
 
 ** Applications
@@ -163,6 +163,11 @@ Harness, and the others under Extensions.
 The library requires LispM Agent's editor's agents (~lispm-agents~, calling ~lispm-agents-define~),
 never LispM Desktop's interface, and defines ~FEATURE-unload-function~ to undo it; see
 [[https://github.com/LispMachineLab/lispm-hermes][lispm-hermes]].
+
+An extension may instead be a library apps are made with, as [[https://github.com/LispMachineLab/emacs-cl][Emacs Common Lisp]] and [[https://github.com/LispMachineLab/lispm-kit][LispM
+Kit]] are: an app whose package names it in its =Package-Requires= ~:requires~ it, so that the App
+Store installs it first.  package.el activates no package whose requirement is not itself an
+installed package.
 
 ** Roles
 
