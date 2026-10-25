@@ -105,7 +105,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-stickies :url "https://github.com/LispMachineLab/lispm-stickies"
-                            :rev "bc3dfcdcebae0f9766894d6b18e68541e0743024")
+                            :rev "01d6cbd324194bf7dd4b54e7b423f595ae47e9e3")
    :feature lispm-stickies)
 
   (security
@@ -120,7 +120,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-security :url "https://github.com/LispMachineLab/lispm-security"
-                            :rev "119c27c12318198f2be8b62e32b1f86af825607b")
+                            :rev "70940829cf93e01a97b6e59c8d10e37878c49bce")
    :command lispm-security)
 
   (remote
@@ -151,7 +151,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-1password :url "https://github.com/LispMachineLab/lispm-1password"
-                             :rev "563f47e40a65685fa223c0c82564e5ad82cfecc5")
+                             :rev "078190b422a1d7173b9d1e60be08c06304f77f0d")
    :command lispm-1password
    :needs ((program "op" :for "reading your vaults" :cask "1password-cli")))
 
@@ -436,7 +436,7 @@
    :author "LispMachineLab, after Peter Norvig"
    :license "AGPL-3.0-or-later AND MIT"
    :package (lispm-mycin :url "https://github.com/LispMachineLab/lispm-mycin"
-                         :rev "34dc9ed6ff6ae9a5ac9562bb7a6c61e657e4e8d1")
+                         :rev "d79983dd5f30ba0b5cb0a26b25ec2deb31ba997e")
    :command lispm-mycin
    :requires (emacs-cl))
 
@@ -452,7 +452,7 @@
    :author "LispMachineLab, after Terry Winograd"
    :license "AGPL-3.0-or-later"
    :package (lispm-shrdlu :url "https://github.com/LispMachineLab/lispm-shrdlu"
-                          :rev "f75160cc3bcdeef2da0e83103973dc406da9316e")
+                          :rev "4063baf8db2e4a35bb75d33ee0c3c7394b825cb0")
    :command lispm-shrdlu
    :requires (emacs-cl)
    :needs ((program "git" :for "fetching SHRDLU's Common Lisp on its first start" :xcode t)))
@@ -473,7 +473,7 @@
    :program "hermes"
    :install "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
    :package (lispm-hermes :url "https://github.com/LispMachineLab/lispm-hermes"
-                          :rev "188186bcd3ddb27229ff6e030aa76feff703d2b4")
+                          :rev "288b69eb755d7acd3d7f0b9e0b7fc9c1e903b353")
    :feature lispm-hermes)
 
   (holon
@@ -490,7 +490,7 @@
    :needs ((program "holon" :for "running Holon's agents" :brew "holon-run/tap/holon"
                     :commands (lispm-holon-new lispm-holon-setup)))
    :package (lispm-holon :url "https://github.com/LispMachineLab/lispm-holon"
-                         :rev "ed33c7b974c25bc7728bf4d1308aed60d64c16e9")
+                         :rev "db0c095922e27d21022cb8e6682df38737b28cf1")
    :feature lispm-holon)
 
   (openclaw
@@ -507,7 +507,7 @@
    :program "openclaw"
    :install "curl -fsSL https://openclaw.ai/install.sh | bash"
    :package (lispm-openclaw :url "https://github.com/LispMachineLab/lispm-openclaw"
-                            :rev "359de9002845469c1c91935fd17d182a5d8158fe")
+                            :rev "e3fa8600c9b87155bac885cabb2fc5e6a5c99576")
    :feature lispm-openclaw)
 
   (emacs-cl
