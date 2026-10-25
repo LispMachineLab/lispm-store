@@ -46,11 +46,10 @@ answer with ~shrdlu_say~ too.  Tell the user what SHRDLU answered in its own wor
 and loads it.")
 
 (defun lispm-blocks-world-show (buffer)
-  "Show SHRDLU's dialogue, BUFFER: in SHRDLU's window of LispM Desktop,
-where the App Store installed it, else in another window."
-  (unless (and (fboundp 'lispm-desktop-store-open)
-               (ignore-errors (lispm-desktop-store-open 'shrdlu) t))
-    (display-buffer buffer '(nil (inhibit-same-window . t)))))
+  "Show SHRDLU's dialogue, BUFFER, in a window other than the selected one,
+the agent's, as `display-buffer' chooses: LispM Desktop shows it in
+SHRDLU's window, where its App Store installed it."
+  (display-buffer buffer '(nil (inhibit-same-window . t))))
 
 (lispm-deftool shrdlu_say
     ((sentence string "One English sentence, as in SHRDLU's dialogue: \"pick up a big red block.\", \"what does the box contain?\"."))

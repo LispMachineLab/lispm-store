@@ -226,6 +226,32 @@ is loaded.  In a new Emacs, as after a restart."
                                           (boundp ',variable))))
                            (list id variable t)))))))))
 
+(defun lispm-store-test--own-p (item)
+  "Non-nil if ITEM's package is one of LispMachineLab's, from git."
+  (let ((package (plist-get item :package)))
+    (and (consp package)
+         (string-prefix-p "https://github.com/LispMachineLab/" (plist-get (cdr package) :url)))))
+
+(ert-deftest lispm-store-test-packages-know-no-desktop ()
+  "The packages of LispMachineLab's apps and extensions, once installed,
+name nothing of LispM Desktop's, outside their tests: they run in any
+Emacs, and the desktop dresses them from its own side.  The
+byte-compiler never sees such a name; this looks for it."
+  (lispm-store-test--install)
+  (pcase-dolist (`(,id . ,item) (append (lispm-store-test--of-kind 'app)
+                                        (lispm-store-test--of-kind 'extension)))
+    (when (lispm-store-test--own-p item)
+      (let* ((name (car (plist-get item :package)))
+             (dir (package-desc-dir (cadr (assq name package-alist)))))
+        (dolist (file (directory-files-recursively dir "\\.el\\'"))
+          (unless (or (string-match-p "/test/\\|-test\\.el\\'\\|-autoloads\\.el\\'\\|-pkg\\.el\\'" file)
+                      (string-match-p "/\\.git/" file))
+            (with-temp-buffer
+              (insert-file-contents file)
+              (let ((case-fold-search t))
+                (should-not (and (re-search-forward "lispm-desktop\\|platinum" nil t)
+                                 (list id (file-relative-name file dir) (line-number-at-pos))))))))))))
+
 (ert-deftest lispm-store-test-extensions-load ()
   "Each extension's package, once installed, loads beside LispM Desktop and
 provides its feature.  In a new Emacs, with LispM Desktop's lisp/ on its
@@ -360,20 +386,21 @@ every tool it defines, defined where LispM Agent's index sees it."
         (should (get-buffer-window "*elfeed-entry*"))
         (should-error (lispm-store-test--call "feeds_show" "+starred" (car keys)))
         (should-error (lispm-store-test--call "feeds_show" nil "0000000000")))
-      ;; In LispM Desktop, in Elfeed's window: an entry shown there, then
-      ;; a filter, which puts the list back in it.
+      ;; Where `display-buffer' puts Elfeed's buffers, as LispM Desktop
+      ;; puts them in Elfeed's window: an entry shown there, then a
+      ;; filter, which puts the list back in it.
       (save-window-excursion
-        (dlet ((lispm-desktop-store-installed '((elfeed :kind app))))
-         (let ((elfeed-window (split-window)))
-          (cl-letf (((symbol-function 'lispm-desktop-store-open) #'ignore)
-                    ((symbol-function 'lispm-desktop-app-window-frame) (lambda (_) (selected-frame))))
-            (select-window elfeed-window)
-            (lispm-store-test--call "feeds_show" nil (car keys))
-            (should (equal (buffer-name (window-buffer elfeed-window)) "*elfeed-entry*"))
-            (should (equal (lispm-store-test--call "feeds_show" "-unread" nil)
-                           "Elfeed lists 1 entry of the filter \"-unread\"."))
-            (should (eq (window-buffer elfeed-window) (elfeed-search-buffer)))
-            (should (equal (with-current-buffer (elfeed-search-buffer) elfeed-search-filter) "-unread"))))))
+        (let* ((elfeed-window (split-window))
+               (display-buffer-alist
+                `((,(lambda (buffer _action)
+                      (string-prefix-p "*elfeed" (buffer-name (get-buffer buffer))))
+                   ,(lambda (buffer alist) (window--display-buffer buffer elfeed-window 'reuse alist))))))
+          (lispm-store-test--call "feeds_show" nil (car keys))
+          (should (equal (buffer-name (window-buffer elfeed-window)) "*elfeed-entry*"))
+          (should (equal (lispm-store-test--call "feeds_show" "-unread" nil)
+                         "Elfeed lists 1 entry of the filter \"-unread\"."))
+          (should (eq (window-buffer elfeed-window) (elfeed-search-buffer)))
+          (should (equal (with-current-buffer (elfeed-search-buffer) elfeed-search-filter) "-unread"))))
       ;; Saved, and found again by a key no tool gave in this Emacs.
       (should (file-exists-p (expand-file-name "index" elfeed-db-directory)))
       (clrhash lispm-feeds--keys)
@@ -419,14 +446,13 @@ every tool it defines, defined where LispM Agent's index sees it."
 
 (ert-deftest lispm-store-test-sticky-notes ()
   "The notes skill sticks a note up, reads, lists, rewrites and colours
-Stickies' notes, which are written to their file."
+Stickies' notes, which are written to their file, with lispm-agent alone:
+the notes are shown in windows of the selected frame."
   (lispm-store-test--load-skills)
   (let ((lispm-stickies-file (expand-file-name "stickies.org" lispm-store-test--work))
         (lispm-stickies--notes nil)
         (lispm-stickies--loaded nil))
-    ;; No windows in a batch Emacs.
-    (cl-letf (((symbol-function 'lispm-stickies--show) #'ignore)
-              ((symbol-function 'lispm-stickies--new-geometry) (lambda (_) '(60 60 240 160))))
+    (save-window-excursion
       (unwind-protect
           (progn
             (should (equal (lispm-store-test--call "stickies_list") "There are no notes."))
@@ -447,6 +473,7 @@ Stickies' notes, which are written to their file."
               (should-error (lispm-store-test--call "stickies_color" id " "))
               (should-error (lispm-store-test--call "stickies_read" "none"))
               (should-error (lispm-store-test--call "stickies_edit" "none" "Hello"))
+              (should (string-prefix-p "*Note: Call Sam at 6" (buffer-name (window-buffer))))
               (lispm-stickies-quit)
               (should (equal (mapcar (lambda (note) (list (plist-get note :id) (plist-get note :text)
                                                           (plist-get note :color)))

@@ -116,18 +116,12 @@ KEY is one the tools gave, as feeds_search does."
           (t (string-trim content)))))
 
 (defun lispm-feeds-show-window ()
-  "Show Elfeed's list of entries and return its window: Elfeed's window of
-LispM Desktop, where its App Store installed Elfeed, the list put back in
-it if an entry was shown there; else another window than the selected one."
-  (if (and (fboundp 'lispm-desktop-store-open)
-           (assq 'elfeed (bound-and-true-p lispm-desktop-store-installed)))
-      (progn
-        (lispm-desktop-store-open 'elfeed)
-        (with-selected-window (frame-selected-window (lispm-desktop-app-window-frame 'elfeed))
-          (elfeed)
-          (selected-window)))
-    (save-window-excursion (elfeed))
-    (display-buffer (elfeed-search-buffer) '(nil (inhibit-same-window . t)))))
+  "Show Elfeed's list of entries and return its window, other than the
+selected one, as `display-buffer' chooses: LispM Desktop shows it in
+Elfeed's window, where its App Store installed Elfeed, the list put back
+in it if an entry was shown there."
+  (save-window-excursion (elfeed))
+  (display-buffer (elfeed-search-buffer) '(nil (inhibit-same-window . t))))
 
 (lispm-deftool feeds_list ()
   "List the user's feeds: each one's title, URL and number of unread entries."
