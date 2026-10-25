@@ -26,8 +26,9 @@
 ;; reads the catalog with: an error there keeps an item out of the App
 ;; Store, a warning leaves it listed short of what it should say, and
 ;; either fails the check.  The rest is this store's: its icons drawn as
-;; pixel art, its files all used, roles' and skills' files.  It needs no
-;; network, only Emacs and LispM Desktop's lisp/:
+;; pixel art, its files all used, roles' and skills' files, skills' code
+;; naming nothing of LispM Desktop's.  It needs no network, only Emacs and
+;; LispM Desktop's lisp/:
 ;;
 ;;   emacs -Q --batch -L ../lispm-desktop/lisp -l test/lispm-store-check.el -f lispm-store-check
 ;;
@@ -274,6 +275,20 @@ Returns (KEYWORDS . BODY)."
              (lispm-store-check--problem "%s:%d: the code does not read, at its line %d: %s"
                                          file line (line-number-at-pos) (error-message-string err)))))))))
 
+(defun lispm-store-check--knows-no-desktop (file line code)
+  "Check that CODE, the block of FILE starting at LINE, names nothing of
+LispM Desktop's: a skill drives the app it requires, in any Emacs, and
+the desktop shows that app its own way, as `display-buffer' asks it."
+  (when code
+    (with-temp-buffer
+      (insert code)
+      (goto-char (point-min))
+      (let ((case-fold-search t))
+        (while (re-search-forward "lispm-desktop[-a-z]*\\|platinum" nil t)
+          (lispm-store-check--problem "%s:%d: the code names LispM Desktop's %s; a skill drives its \
+app, which the desktop shows its own way"
+                                      file (+ line (line-number-at-pos) -1) (match-string 0)))))))
+
 (defun lispm-store-check--skill (id item)
   "Check the skill ID, whose properties are ITEM; return the files it uses."
   (let* ((file (plist-get item :file))
@@ -293,7 +308,8 @@ Returns (KEYWORDS . BODY)."
                (unless (lispm-store-check--line-p (cdr (assoc key keywords)))
                  (lispm-store-check--problem "%s: needs #+%s:" org key)))
              (pcase-dolist (`(,line ,code) blocks)
-               (lispm-store-check--code org line code)))
+               (lispm-store-check--code org line code)
+               (lispm-store-check--knows-no-desktop org line code)))
            (if (string-suffix-p "/" file)
                (directory-files-recursively (lispm-store-check--file file) "")
              (list org))))))

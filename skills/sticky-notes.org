@@ -1,11 +1,11 @@
 #+title: Stick notes
 #+description: Stick notes on the user's desktop with Stickies: list and read them, put up a new note in a colour, change a note's text or colour, and bring it in front.
 
-The user keeps notes with Stickies: each note is a small window of coloured paper over the
-desktop, and all of them are kept in one org file (~lispm-stickies-file~), a heading each.
-Stickies writes that file while it runs, so change notes through this skill's tools, never by
-editing the file.  This skill gives you those tools, and the functions behind them for
-~eval_elisp~.
+The user keeps notes with Stickies: each note is coloured paper, a small window of its own over
+the desktop in LispM Desktop, a buffer in any other Emacs, and all of them are kept in one org
+file (~lispm-stickies-file~), a heading each.  Stickies writes that file while it runs, so change
+notes through this skill's tools, never by editing the file.  This skill gives you those tools,
+and the functions behind them for ~eval_elisp~.
 
 * Finding notes
 
@@ -32,7 +32,7 @@ do: its close box, or C-c C-k in it.
 With ~eval_elisp~: ~(lispm-stickies)~ opens Stickies, its notes coming back where they were;
 ~(lispm-stickies-quit)~ puts them away.  ~(lispm-stickies-notes)~ is the notes as plists (~:id~,
 ~:color~, ~:text~, ~:created~, ~:modified~); ~(lispm-stickies-find-note ID)~ a note's buffer, which
-~(lispm-stickies-roll BUFFER)~ rolls up or down and ~(lispm-stickies-zoom BUFFER)~ sizes to its text.
+~(lispm-stickies-show-note BUFFER)~ brings in front.
 
 * The code
 

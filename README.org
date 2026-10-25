@@ -51,7 +51,7 @@ App Store takes them from the catalog, never from the package.
 | ~:license~  | the licence of what it installs, an SPDX expression, as ~GPL-3.0-or-later~              |
 | ~:package~  | how to install it, below; absent for a part of Emacs, such as Calc                      |
 | ~:command~  | the command that opens it, autoloaded by the package                                   |
-| ~:feature~  | instead of ~:command~, for an app running windows of its own: a library that, loaded, says what it does with ~(lispm-desktop-define-app 'ID :activate ... :menus ... :running ...)~, as [[https://github.com/LispMachineLab/lispm-stickies][lispm-stickies]] does, and is unloaded when the app is uninstalled |
+| ~:feature~  | instead of ~:command~, for an app running windows of its own: a library that, once loaded, LispM Desktop makes the app ID with ~lispm-desktop-define-app~ from its own side, as it does [[https://github.com/LispMachineLab/lispm-stickies][lispm-stickies]], and unloads when the app is uninstalled |
 | ~:needs~    | optional: programs, libraries and applications it uses beyond Emacs, below             |
 
 ~:package~ is a symbol, for a package from GNU ELPA, NonGNU ELPA or MELPA, or
@@ -203,6 +203,11 @@ A skill is the manual of what it ~:requires~: the apps or extensions it drives, 
 LispM Desktop's App Store installs it with them, updates it when they are updated, the skill
 pinned by its hash meanwhile, and removes it with them; it never lists a skill on its own.
 
+A skill works with lispm-agent alone: its code drives the app through the app's own functions and
+names nothing of LispM Desktop's.  To show the user an app's buffer it calls ~display-buffer~,
+which LispM Desktop answers with the app's window, and any other Emacs with a window beside the
+agent's; ~make check~ fails a skill whose code names ~lispm-desktop~ or ~platinum~.
+
 Agents do not get a list of skills: they find them with ~search_tools~, by their title,
 description and headings and by the tools their code defines, read without evaluating it.  So
 give each tool a literal ~(lispm-deftool NAME PARAMS "DOC" ...)~ at the top of a ~:lispm load~
@@ -211,9 +216,12 @@ that the agent's index sees every tool a skill defines.
 
 * Listing an item
 
-1. *Write the package*, in a repository of its own: an app's autoloaded command opening its buffer
-   (or the ~:feature~ library above), its interface described with ~lispm-desktop-app-ui-define~
-   inside ~(with-eval-after-load 'lispm-desktop-app-ui ...)~; see [[https://github.com/LispMachineLab/lispm-desktop#writing-an-application][Writing an application]].
+1. *Write the package*, in a repository of its own, running in any Emacs and naming nothing of
+   LispM Desktop's: an app's autoloaded command opening its buffer (or the ~:feature~ library
+   above), and public functions saying what its window shows, its predicates, status and page, as
+   [[https://github.com/LispMachineLab/lispm-rotom][lispm-rotom]] does, with a test of its own grepping its files for ~lispm-desktop~ and ~platinum~.
+   Its interface on the desktop, the skin made of those functions, is the desktop's, in its
+   =lisp/lispm-desktop-app-skins.el=, added by a pull request there; see [[https://github.com/LispMachineLab/lispm-desktop#writing-an-application][Writing an application]].
 2. *Add one item* to catalog.eld, its package pinned to a full commit SHA, of a release tag where
    there is one, with its whole listing (see [[*The listing][The listing]]): the icons it names in [[file:icons/][icons/]], its
    banner in [[file:banners/][banners/]] and its introduction in [[file:about/][about/]].
@@ -221,12 +229,14 @@ that the agent's index sees every tool a skill defines.
    the App Store, as a listing short of its banner or introduction; a warning leaves it listed, but
    not as it should be; both fail), then this store's: unique IDs, ~:requires~, icons and banners
    drawn as pixel art, the files named and no others, roles' keywords,
-   skills' code reads, skills require the apps or extensions they drive.  Offline; needs lispm-desktop's =lisp/=, beside this checkout or named by
+   skills' code reads and names nothing of LispM Desktop's, skills require the apps or extensions
+   they drive.  Offline; needs lispm-desktop's =lisp/=, beside this checkout or named by
    ~LISPM_DESKTOP~.  In LispM Desktop, =M-x lispm-desktop-store-check-catalog= says the same of any
    catalog.
 4. *Run ~make test~*: installs every package as LispM Desktop does and checks that apps' commands
-   exist and extensions load, that roles name real tools, that agents' search sees every tool
-   of each skill, and runs the skills' tools.  Needs the
+   exist and extensions load, that LispMachineLab's packages name nothing of LispM Desktop's
+   outside their tests, that roles name real tools, that agents' search sees every tool of each
+   skill, and runs the skills' tools.  Needs the
    network and checkouts of lispm-agent and lispm-desktop beside this one (or ~LISPM_AGENT~ and
    ~LISPM_DESKTOP~ naming their =lisp/=).  A new skill adds its test to [[file:test/lispm-store-test.el][test/lispm-store-test.el]].
 5. *Open a pull request* adding the item and its files only.  CI runs both checks on Emacs 30.1 and
