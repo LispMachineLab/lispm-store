@@ -120,8 +120,9 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-security :url "https://github.com/LispMachineLab/lispm-security"
-                            :rev "70940829cf93e01a97b6e59c8d10e37878c49bce")
-   :command lispm-security)
+                            :rev "8739611d3b35a7cd0a6e34a6c2ce57c7cf0aaf77")
+   :command lispm-security
+   :requires (lispm-kit))
 
   (remote
    :kind app
@@ -151,8 +152,9 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-1password :url "https://github.com/LispMachineLab/lispm-1password"
-                             :rev "078190b422a1d7173b9d1e60be08c06304f77f0d")
+                             :rev "1bd2d027a95479aa87ca15de6663a073ec3ac6b2")
    :command lispm-1password
+   :requires (lispm-kit)
    :needs ((program "op" :for "reading your vaults" :cask "1password-cli")))
 
   (rotom
@@ -167,8 +169,9 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-rotom :url "https://github.com/LispMachineLab/lispm-rotom"
-                         :rev "8cf9821033b43f0e69b7f8a7513cc3c73bab763a")
+                         :rev "4ff572f7900af3fb4db4f0d0dffdae218eedd3e5")
    :command lispm-rotom
+   :requires (lispm-kit)
    :needs ((program "rotom" :for "reaching the models of your accounts" :cargo "rotom")))
 
   ;; To chat with.
@@ -436,9 +439,9 @@
    :author "LispMachineLab, after Peter Norvig"
    :license "AGPL-3.0-or-later AND MIT"
    :package (lispm-mycin :url "https://github.com/LispMachineLab/lispm-mycin"
-                         :rev "d79983dd5f30ba0b5cb0a26b25ec2deb31ba997e")
+                         :rev "44714bba908ec41dafb9996c76fb0e5bc57badfe")
    :command lispm-mycin
-   :requires (emacs-cl))
+   :requires (emacs-cl lispm-kit))
 
   (shrdlu
    :kind app
@@ -452,9 +455,9 @@
    :author "LispMachineLab, after Terry Winograd"
    :license "AGPL-3.0-or-later"
    :package (lispm-shrdlu :url "https://github.com/LispMachineLab/lispm-shrdlu"
-                          :rev "4063baf8db2e4a35bb75d33ee0c3c7394b825cb0")
+                          :rev "78f92887e4706a666896631ff6a14adc70a4cc28")
    :command lispm-shrdlu
-   :requires (emacs-cl)
+   :requires (emacs-cl lispm-kit)
    :needs ((program "git" :for "fetching SHRDLU's Common Lisp on its first start" :xcode t)))
 
   ;; Extensions: agents for the editor, in AI Harness, then the others.
@@ -523,6 +526,20 @@
    :package (emacs-cl :url "https://github.com/LispMachineLab/emacs-cl"
                       :rev "62007715826889b7daaedfd27cbaa9aa864842f1")
    :feature emacs-cl)
+
+  (lispm-kit
+   :kind extension
+   :name "LispM Kit"
+   :subtitle "What apps are made with"
+   :description "What the App Store's applications are made with, in any Emacs: each of an application's commands declared once, its key, its menu item and its button, so that Emacs's menus and the desktop's buttons and keys windows say the same."
+   :icon "lispm-kit"
+   :banner "lispm-kit"
+   :about "lispm-kit"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
+   :package (lispm-kit :url "https://github.com/LispMachineLab/lispm-kit"
+                       :rev "5bf1944bc28e23d5d142d0e70846d5ebe3deed30")
+   :feature lispm-kit)
 
   ;; Agent roles, LispM Agent's: the App Store does not list them.
 

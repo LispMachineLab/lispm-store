@@ -226,6 +226,30 @@ is loaded.  In a new Emacs, as after a restart."
                                           (boundp ',variable))))
                            (list id variable t)))))))))
 
+(defun lispm-store-test--package-name (item)
+  "The name of ITEM's package, or nil."
+  (let ((package (plist-get item :package)))
+    (if (consp package) (car package) package)))
+
+(ert-deftest lispm-store-test-requires-what-packages-require ()
+  "An app or extension whose package requires another item's package
+:requires that item, which the App Store then installs first, as
+MYCIN's requires Emacs Common Lisp: package.el activates no package
+whose requirement is not itself an installed package."
+  (lispm-store-test--install)
+  (let* ((items (append (lispm-store-test--of-kind 'app) (lispm-store-test--of-kind 'extension)))
+         (owners (delq nil (mapcar (pcase-lambda (`(,id . ,item))
+                                     (when-let* ((name (lispm-store-test--package-name item)))
+                                       (cons name id)))
+                                   items))))
+    (pcase-dolist (`(,id . ,item) items)
+      (when-let* ((name (lispm-store-test--package-name item))
+                  (desc (cadr (assq name package-alist))))
+        (dolist (requirement (package-desc-reqs desc))
+          (when-let* ((other (alist-get (car requirement) owners)))
+            (should (equal (list id other (and (memq other (plist-get item :requires)) t))
+                           (list id other t)))))))))
+
 (defun lispm-store-test--own-p (item)
   "Non-nil if ITEM's package is one of LispMachineLab's, from git."
   (let ((package (plist-get item :package)))
