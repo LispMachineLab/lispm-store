@@ -105,7 +105,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-stickies :url "https://github.com/LispMachineLab/lispm-stickies"
-                            :rev "bc3dfcdcebae0f9766894d6b18e68541e0743024")
+                            :rev "01d6cbd324194bf7dd4b54e7b423f595ae47e9e3")
    :feature lispm-stickies)
 
   (security
@@ -120,7 +120,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-security :url "https://github.com/LispMachineLab/lispm-security"
-                            :rev "e1dac7eaed0f2db920c2d2b47549da95318b8963")
+                            :rev "8739611d3b35a7cd0a6e34a6c2ce57c7cf0aaf77")
    :command lispm-security
    :requires (lispm-kit))
 
@@ -136,7 +136,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-remote :url "https://github.com/LispMachineLab/lispm-remote"
-                          :rev "391b1dd311dcf654ede54d1eb60b28f600f57f60"
+                          :rev "7aa3a54cba6f1fea9e8e8e8b4aab72d388d25fb9"
                           :lisp-dir "lisp")
    :command lispm-remote)
 
@@ -152,7 +152,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-1password :url "https://github.com/LispMachineLab/lispm-1password"
-                             :rev "6054c68cd952fddf58307ab1ef875cd0532c67f2")
+                             :rev "1bd2d027a95479aa87ca15de6663a073ec3ac6b2")
    :command lispm-1password
    :requires (lispm-kit)
    :needs ((program "op" :for "reading your vaults" :cask "1password-cli")))
@@ -169,7 +169,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-rotom :url "https://github.com/LispMachineLab/lispm-rotom"
-                         :rev "f13dd957300462b0cb1d7a6d2127e3f6f608449f")
+                         :rev "4ff572f7900af3fb4db4f0d0dffdae218eedd3e5")
    :command lispm-rotom
    :requires (lispm-kit)
    :needs ((program "rotom" :for "reaching the models of your accounts" :cargo "rotom")))
@@ -439,7 +439,7 @@
    :author "LispMachineLab, after Peter Norvig"
    :license "AGPL-3.0-or-later AND MIT"
    :package (lispm-mycin :url "https://github.com/LispMachineLab/lispm-mycin"
-                         :rev "4ec56ef99fc3fbd04303e749361b8cdb3406fd29")
+                         :rev "44714bba908ec41dafb9996c76fb0e5bc57badfe")
    :command lispm-mycin
    :requires (emacs-cl lispm-kit))
 
@@ -455,7 +455,7 @@
    :author "LispMachineLab, after Terry Winograd"
    :license "AGPL-3.0-or-later"
    :package (lispm-shrdlu :url "https://github.com/LispMachineLab/lispm-shrdlu"
-                          :rev "6ddb41ba408df3efcbf02e837d4b5dd846401bf5")
+                          :rev "78f92887e4706a666896631ff6a14adc70a4cc28")
    :command lispm-shrdlu
    :requires (emacs-cl lispm-kit)
    :needs ((program "git" :for "fetching SHRDLU's Common Lisp on its first start" :xcode t)))
@@ -476,7 +476,7 @@
    :program "hermes"
    :install "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
    :package (lispm-hermes :url "https://github.com/LispMachineLab/lispm-hermes"
-                          :rev "188186bcd3ddb27229ff6e030aa76feff703d2b4")
+                          :rev "288b69eb755d7acd3d7f0b9e0b7fc9c1e903b353")
    :feature lispm-hermes)
 
   (holon
@@ -493,7 +493,7 @@
    :needs ((program "holon" :for "running Holon's agents" :brew "holon-run/tap/holon"
                     :commands (lispm-holon-new lispm-holon-setup)))
    :package (lispm-holon :url "https://github.com/LispMachineLab/lispm-holon"
-                         :rev "ed33c7b974c25bc7728bf4d1308aed60d64c16e9")
+                         :rev "db0c095922e27d21022cb8e6682df38737b28cf1")
    :feature lispm-holon)
 
   (openclaw
@@ -510,7 +510,7 @@
    :program "openclaw"
    :install "curl -fsSL https://openclaw.ai/install.sh | bash"
    :package (lispm-openclaw :url "https://github.com/LispMachineLab/lispm-openclaw"
-                            :rev "359de9002845469c1c91935fd17d182a5d8158fe")
+                            :rev "e3fa8600c9b87155bac885cabb2fc5e6a5c99576")
    :feature lispm-openclaw)
 
   (emacs-cl
@@ -538,7 +538,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-kit :url "https://github.com/LispMachineLab/lispm-kit"
-                       :rev "ec31f22a670d4556cbf4c2176fb282d67d3a2d55")
+                       :rev "5bf1944bc28e23d5d142d0e70846d5ebe3deed30")
    :feature lispm-kit)
 
   ;; Agent roles, LispM Agent's: the App Store does not list them.
