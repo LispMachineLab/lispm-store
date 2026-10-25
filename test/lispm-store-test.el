@@ -115,7 +115,10 @@ A package from git may require a newer version of a package Emacs
 has built in, such as Compat: Emacs 30.1's package-vc leaves that
 unmet, as it compares no versions (fixed in 30.2).  Then the newer
 one is installed from the archives, and the package compiled again
-in a new Emacs, which loads it rather than the built-in one."
+in a new Emacs, which loads it rather than the built-in one.
+A LispM library no archive holds, such as lispm-prebuilt, is installed
+from git first, as the App Store's installer does it
+\(`lispm-desktop-store-installer--libraries')."
   (unless lispm-store-test--installed
     (pcase-dolist (`(,_id . ,item) (lispm-store-test--in-install-order
                                     (append (lispm-store-test--of-kind 'app)
@@ -127,6 +130,9 @@ in a new Emacs, which loads it rather than the built-in one."
         (`(,name . ,spec)
          (when (lispm-store-test--emacs
                 `(progn
+                   (load ,(locate-library "lispm-desktop-store-installer") nil t)
+                   (advice-add 'package-vc-install-dependencies :around
+                               #'lispm-desktop-store-installer--libraries)
                    (package-vc-install ',(cons name (cl-loop for (key value) on spec by #'cddr
                                                              unless (eq key :rev) append (list key value)))
                                        ,(plist-get spec :rev))
