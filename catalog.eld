@@ -138,7 +138,8 @@
    :package (lispm-remote :url "https://github.com/LispMachineLab/lispm-remote"
                           :rev "cbc90408cddaeb5856f2a15d5c3867601229b36e"
                           :lisp-dir "lisp")
-   :command lispm-remote)
+   :command lispm-remote
+   :requires (lispm-prebuilt))
 
   (1password
    :kind app
@@ -540,6 +541,20 @@
    :package (lispm-kit :url "https://github.com/LispMachineLab/lispm-kit"
                        :rev "5bf1944bc28e23d5d142d0e70846d5ebe3deed30")
    :feature lispm-kit)
+
+  (lispm-prebuilt
+   :kind extension
+   :name "LispM Prebuilt"
+   :subtitle "Native code, checked"
+   :description "The native code of LispM's packages, as LispM Remote's Rings node: the one built for this computer, downloaded in the background and kept only when its SHA-256 is the one the package pins, so that nobody has to build anything or wait for it."
+   :icon "lispm-prebuilt"
+   :banner "lispm-prebuilt"
+   :about "lispm-prebuilt"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
+   :package (lispm-prebuilt :url "https://github.com/LispMachineLab/lispm-prebuilt"
+                            :rev "6a42033b26579ba7648111166e24904f5277182e")
+   :feature lispm-prebuilt)
 
   ;; Agent roles, LispM Agent's: the App Store does not list them.
 

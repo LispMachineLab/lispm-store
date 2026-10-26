@@ -164,10 +164,11 @@ The library requires LispM Agent's editor's agents (~lispm-agents~, calling ~lis
 never LispM Desktop's interface, and defines ~FEATURE-unload-function~ to undo it; see
 [[https://github.com/LispMachineLab/lispm-hermes][lispm-hermes]].
 
-An extension may instead be a library apps are made with, as [[https://github.com/LispMachineLab/emacs-cl][Emacs Common Lisp]] and [[https://github.com/LispMachineLab/lispm-kit][LispM
-Kit]] are: an app whose package names it in its =Package-Requires= ~:requires~ it, so that the App
-Store installs it first.  package.el activates no package whose requirement is not itself an
-installed package.
+An extension may instead be a library apps are made with, as [[https://github.com/LispMachineLab/emacs-cl][Emacs Common Lisp]], [[https://github.com/LispMachineLab/lispm-kit][LispM
+Kit]] and [[https://github.com/LispMachineLab/lispm-prebuilt][LispM Prebuilt]] are: an app whose package names it in its =Package-Requires=
+~:requires~ it, so that the App Store installs it first, a LispM Desktop older than 0.14.0
+included, which installs no library that only git holds.  package.el activates no package whose
+requirement is not itself an installed package.
 
 ** Roles
 
