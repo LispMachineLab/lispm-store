@@ -1,8 +1,9 @@
 [ComfyUI](https://github.com/comfyanonymous/ComfyUI) makes images, video and sound with
 workflows: a model loaded, a prompt encoded, a sampler run, an image decoded, each node's outputs
-linked to the next ones' inputs.  This application draws your ComfyUI server's workflows as
+linked to the next ones' inputs.  LispM-ComfyUI draws your ComfyUI server's workflows as
 ComfyUI itself does, and lets you build and run them from the keyboard: every node lights up
-while it runs, and the image it makes appears inside it.
+while it runs, and the image it makes appears inside it.  It is not ComfyUI itself: it works with
+a ComfyUI server you run, on this Mac or another machine.
 
 ## Using it
 
