@@ -108,6 +108,22 @@
                             :rev "01d6cbd324194bf7dd4b54e7b423f595ae47e9e3")
    :feature lispm-stickies)
 
+  (comfyui
+   :kind app
+   :name "ComfyUI"
+   :subtitle "Images, node by node"
+   :category productivity
+   :description "ComfyUI's workflows drawn as ComfyUI draws them, from your ComfyUI server: nodes added, linked and set from the keyboard, the workflow run, each node lit as it runs and the images it makes shown in it, the server's library opened and saved, and LispM's agents editing and running it too."
+   :icon "comfyui"
+   :banner "comfyui"
+   :about "comfyui"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
+   :package (lispm-comfyui :url "https://github.com/LispMachineLab/lispm-comfyui"
+                           :rev "12360cbf3498a7332bbe7c6b7e07ab1bc9059319")
+   :command lispm-comfyui
+   :requires (lispm-kit))
+
   (security
    :kind app
    :name "Security"
