@@ -110,7 +110,7 @@
 
   (comfyui
    :kind app
-   :name "ComfyUI"
+   :name "LispM-ComfyUI"
    :subtitle "Images, node by node"
    :category productivity
    :description "ComfyUI's workflows drawn as ComfyUI draws them, from your ComfyUI server: nodes added, linked and set from the keyboard, the workflow run, each node lit as it runs and the images it makes shown in it, the server's library opened and saved, and LispM's agents editing and running it too."
