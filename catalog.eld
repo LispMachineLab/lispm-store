@@ -136,7 +136,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-remote :url "https://github.com/LispMachineLab/lispm-remote"
-                          :rev "11cccae01936980e6a9fc4ca600a97e42ef5bddd"
+                          :rev "cbc90408cddaeb5856f2a15d5c3867601229b36e"
                           :lisp-dir "lisp")
    :command lispm-remote)
 
