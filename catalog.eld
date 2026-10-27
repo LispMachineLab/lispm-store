@@ -136,7 +136,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-mail :url "https://github.com/LispMachineLab/lispm-mail"
-                        :rev "b429969a75c5092cfc5210009325e690f4e2a55a")
+                        :rev "d6ce569a8eb8bd6c81b4aef1030a66a307e96daa")
    :command lispm-mail
    :requires (lispm-kit))
 
