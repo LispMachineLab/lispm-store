@@ -5,6 +5,9 @@ LISPM_AGENT ?= ../lispm-agent/lisp
 # lisp/ of LispM Desktop, whose editor the extensions extend: a checkout
 # beside this one by default.
 LISPM_DESKTOP ?= ../lispm-desktop/lisp
+# LispM Kit, whose engine translates the desktop's words and the agent's: a
+# checkout beside this one by default.
+LISPM_KIT ?= ../lispm-kit
 # LispM UI, the library LispM's agents and applications are drawn with: a
 # checkout beside this one by default, where there is one.
 LISPM_UI ?= ../lispm-ui
@@ -16,12 +19,12 @@ UI = $(if $(wildcard $(LISPM_UI)/lispm-ui.el),-L $(LISPM_UI))
 # its applications and extensions by LispM Desktop's own rules
 # (lispm-desktop-catalog.el).  Offline.
 check:
-	$(EMACS) -Q --batch -L $(LISPM_DESKTOP) -l test/lispm-store-check.el -f lispm-store-check
+	$(EMACS) -Q --batch -L $(LISPM_KIT) -L $(LISPM_DESKTOP) -l test/lispm-store-check.el -f lispm-store-check
 
 # What check cannot see without installing: the apps' and extensions'
 # packages, installed as LispM Desktop installs them, the extensions loaded
 # beside it, the roles' tools and the skills at work.  Needs the network
 # and git.
 test:
-	$(EMACS) -Q --batch $(UI) -L $(LISPM_AGENT) -L $(LISPM_DESKTOP) -l test/lispm-store-test.el \
+	$(EMACS) -Q --batch $(UI) -L $(LISPM_KIT) -L $(LISPM_AGENT) -L $(LISPM_DESKTOP) -l test/lispm-store-test.el \
 	  -f ert-run-tests-batch-and-exit
