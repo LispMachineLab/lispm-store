@@ -43,7 +43,8 @@
   "A directory of this run's own.")
 
 ;; Packages go to a directory of this run's, LispM's own dependencies
-;; (its Package-Requires) first.
+;; (its Package-Requires) first, but for those on the load path already,
+;; as LispM UI's checkout.
 (setq package-user-dir (expand-file-name "elpa" lispm-store-test--work)
       package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
                          ("nongnu" . "https://elpa.nongnu.org/nongnu/")
@@ -53,7 +54,8 @@
 (with-temp-buffer
   (insert-file-contents (or (locate-library "lispm.el" t) (error "lispm-agent's lisp/ is not on the load path")))
   (pcase-dolist (`(,name . ,_version) (package-desc-reqs (package-buffer-info)))
-    (unless (or (eq name 'emacs) (package-installed-p name))
+    (unless (or (eq name 'emacs) (package-installed-p name)
+                (locate-library (concat (symbol-name name) ".el") t))
       (package-install name))))
 (require 'lispm)
 
