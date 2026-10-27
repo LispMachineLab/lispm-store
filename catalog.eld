@@ -136,7 +136,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-security :url "https://github.com/LispMachineLab/lispm-security"
-                            :rev "8739611d3b35a7cd0a6e34a6c2ce57c7cf0aaf77")
+                            :rev "e73576ac7edbea79b2390633c35d2121ee24067a")
    :command lispm-security
    :requires (lispm-kit))
 
@@ -493,7 +493,7 @@
    :program "hermes"
    :install "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
    :package (lispm-hermes :url "https://github.com/LispMachineLab/lispm-hermes"
-                          :rev "288b69eb755d7acd3d7f0b9e0b7fc9c1e903b353")
+                          :rev "7e07b87c10e305600e8b84c5f280d215e2496fac")
    :feature lispm-hermes)
 
   (holon
