@@ -124,6 +124,22 @@
    :command lispm-comfyui
    :requires (lispm-kit))
 
+  (mail
+   :kind app
+   :name "LispM Mail"
+   :subtitle "Your mail, in one window"
+   :category productivity
+   :description "Your mail accounts in a classic-style window: a folder list with the unread counts, a table of messages sorted by any column, the message chosen under it in its box of headers, replies and new mail written and sent in the background. Accounts are added in a form that fills their servers in from the address, for Gmail, iCloud, QQ Mail, NetEase and others. Made of Emacs's own mail: imap.el, smtpmail and message mode."
+   :icon "mail"
+   :banner "mail"
+   :about "mail"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
+   :package (lispm-mail :url "https://github.com/LispMachineLab/lispm-mail"
+                        :rev "d6ce569a8eb8bd6c81b4aef1030a66a307e96daa")
+   :command lispm-mail
+   :requires (lispm-kit))
+
   (security
    :kind app
    :name "Security"
