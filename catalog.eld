@@ -589,7 +589,7 @@
    :license "AGPL-3.0-or-later"
    :requires (lispm-kit)
    :package (lispm-ui :url "https://github.com/LispMachineLab/lispm-ui"
-                      :rev "a3b0b753ecf9578443aa96c6d66018502f83cec7")
+                      :rev "04993e02461c4a5f59040f65df87aeefc62a5f97")
    :feature lispm-ui)
 
   (lispm-prebuilt
