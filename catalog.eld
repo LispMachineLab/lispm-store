@@ -120,7 +120,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-comfyui :url "https://github.com/LispMachineLab/lispm-comfyui"
-                           :rev "63f2e6468c5ef0b1b5afaa4e05d0a2b72a9c0af9")
+                           :rev "1e3c762678310f5e2b975d7275caff44034b43ae")
    :command lispm-comfyui
    :requires (lispm-kit lispm-ui))
 
