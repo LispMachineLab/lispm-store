@@ -25,9 +25,14 @@ Control-scroll to zoom.
 
 ## Your server
 
-Set `lispm-comfyui-url` to your ComfyUI server, `http://127.0.0.1:8188` if it runs on this Mac.
-A server elsewhere on your network is reached at its address; behind a proxy that asks for a
-password, `lispm-comfyui-headers` sends it.
+Press `,` in a workflow, or its **Settings** button, and type your ComfyUI server's address,
+`http://127.0.0.1:8188` if it runs on this Mac.  **Test Connection** says whether it answers, with
+its GPU and how many node types it has; **Save** keeps it.  The colours and fonts workflows are
+drawn with are set there too.
+
+A server elsewhere on your network is reached at its address once macOS lets LispM onto the
+local network, in System Settings › Privacy & Security › Local Network; LispM-ComfyUI says so when
+it does not.  Behind a proxy that asks for a password, `lispm-comfyui-headers` sends it.
 
 ## For agents
 
