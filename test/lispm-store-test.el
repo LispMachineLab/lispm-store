@@ -965,5 +965,108 @@ them, against a fake telega-server."
       (let ((telega--auth-state "WaitPhoneNumber"))
         (should-error (lispm-store-test--call "telegram_chats" nil))))))
 
+(defconst lispm-store-test--mail-message
+  "From: Grace Hopper <grace@navy.mil>\nTo: Ada Lovelace <ada@example.com>\nSubject: Lunch\nDate: Tue, 27 Oct 2026 10:00:00 +0000\nMessage-ID: <1@navy.mil>\nContent-Type: text/plain; charset=utf-8\n\nShall we?\n"
+  "The message the fake mail server holds as UID 5.")
+
+(ert-deftest lispm-store-test-use-mail ()
+  "The mail skill lists mailboxes and messages, searches on the server,
+reads, keeps a reply in Drafts, moves and deletes, against a fake server;
+what changes mail asks the user every time."
+  (lispm-store-test--load-skills)
+  (let* ((home (make-temp-file "lispm-store-test-mail" t))
+         (lispm-mail-directory (expand-file-name "mail/" home))
+         (lispm-mail-accounts (list (list :id "ada" :name "Ada Lovelace" :address "ada@example.com")))
+         (lispm-mail-default-account nil)
+         (lispm-mail-changed-functions nil)
+         (lispm-mail-new-mail-functions nil)
+         (lispm-mail--mailboxes (make-hash-table :test #'equal))
+         (lispm-mail--boxes (make-hash-table :test #'equal))
+         (lispm-mail--workers (make-hash-table :test #'equal))
+         (lispm-use-mail--seen (make-hash-table :test #'equal))
+         (lispm-mail--save-timer nil)
+         (lispm-mail--unsaved nil)
+         (headers (list (list :uid 5 :flags nil :date 1793095200 :from '("Grace Hopper" . "grace@navy.mil")
+                              :subject "Lunch" :message-id "<1@navy.mil>")
+                        (list :uid 4 :flags '("\\Seen") :date 1793008800 :from '(nil . "news@example.org")
+                              :subject "Weekly")))
+         asked kept)
+    (cl-letf (((symbol-function 'lispm-mail-request)
+               (lambda (_id operation properties callback)
+                 (push (cons operation properties) asked)
+                 (run-at-time
+                  0 nil callback
+                  (pcase operation
+                    ('mailboxes '((:name "INBOX" :flags nil :messages 2 :unseen 1)
+                                  (:name "[Gmail]" :flags ("\\Noselect"))
+                                  (:name "[Gmail]/All Mail" :flags ("\\All") :messages 2 :unseen 1)
+                                  (:name "[Gmail]/Drafts" :flags ("\\Drafts") :messages 0 :unseen 0)
+                                  (:name "[Gmail]/Trash" :flags ("\\Trash") :messages 0 :unseen 0)
+                                  (:name "Receipts" :flags nil :messages 0 :unseen 0)))
+                    ('sync (list :uidvalidity "7" :exists 2 :flags '((4 "\\Seen") (5)) :headers headers))
+                    ('search (list :uidvalidity "7" :total 3 :headers headers))
+                    ('snippets nil)
+                    ('fetch (make-directory (file-name-directory (plist-get properties :file)) t)
+                            (with-temp-file (plist-get properties :file)
+                              (insert lispm-store-test--mail-message))
+                            100)
+                    ('append (push (with-temp-buffer
+                                     (insert-file-contents (plist-get properties :file))
+                                     (buffer-string))
+                                   kept)
+                             t)
+                    (_ t))
+                  nil))))
+      (unwind-protect
+          (progn
+            (let ((said (lispm-store-test--call-async "mail_mailboxes")))
+              (should (string-match-p "\\`ada@example.com (not connected):\n  INBOX (Inbox), 1 unread, 2 messages\n" said))
+              (should (string-search "\n  [Gmail]/Trash (Trash), 0 messages" said))
+              (should (string-search "\n  Receipts, 0 messages" said))
+              (should-not (string-search "[Gmail] " said)))
+            (should (string-match-p "\\`ada@example.com, INBOX: 1 unread:\n5  [-0-9]+ [:0-9]+  Grace Hopper <grace@navy.mil>  Lunch  \\[unread\\]\\'"
+                                    (lispm-store-test--call-async "mail_list" nil nil t nil)))
+            (let ((said (lispm-store-test--call-async "mail_search" "from:grace" nil nil 2)))
+              (should (equal (car asked) '(search :mailbox "[Gmail]/All Mail" :query "from:grace" :limit 2)))
+              (should (string-prefix-p "ada@example.com, [Gmail]/All Mail: 3 found, the newest 2:\n5  " said))
+              (should (string-match-p "\n4  [-0-9]+ [:0-9]+  news@example.org  Weekly\\'" said)))
+            (let ((said (lispm-store-test--call-async "mail_read" 5 "[Gmail]/All Mail" nil)))
+              (should (string-prefix-p "From: Grace Hopper <grace@navy.mil>\nTo: Ada Lovelace <ada@example.com>\n" said))
+              (should (string-search "Subject: Lunch\n\nShall we?" said)))
+            ;; Changing mail asks every time, and says what it would do.
+            (dolist (name '("mail_draft" "mail_move" "mail_delete"))
+              (should (lispm-tool-always-ask (lispm-get-tool name)))
+              (should (eq (lispm-tool-permission (lispm-get-tool name)) 'write)))
+            (should (eq (lispm-tool-permission (lispm-get-tool "mail_search")) 'read))
+            (should (string-match-p "\\`A draft, kept unsent in ada@example.com's Drafts, replying to Grace Hopper's “Lunch”:\n\n\nThursday works\\.\\'"
+                                    (funcall (lispm-tool-preview (lispm-get-tool "mail_draft"))
+                                             "Thursday works." nil nil nil nil 5 "[Gmail]/All Mail" nil)))
+            (should (string-match-p "Kept in ada@example.com's \\[Gmail\\]/Drafts, unsent: to Grace Hopper <grace@navy.mil>, “Re: Lunch”"
+                                    (lispm-store-test--call-async "mail_draft" "Thursday works." nil nil nil nil
+                                                                  5 "[Gmail]/All Mail" nil)))
+            (should (string-match-p "^To: Grace Hopper <grace@navy.mil>$" (car kept)))
+            ;; Emacs 30's message mode adds a comment after it.
+            (should (string-match-p "^In-Reply-To: <1@navy.mil>" (car kept)))
+            (should (string-search "Thursday works." (car kept)))
+            (should (string-search "> Shall we?" (car kept)))
+            (should (equal (plist-get (cdr (assq 'append asked)) :mailbox) "[Gmail]/Drafts"))
+            (lispm-store-test--call-async "mail_draft" "Hello" "alan@bletchley.uk" "Hi" nil nil nil nil nil)
+            (should (string-match-p "^To: alan@bletchley.uk$" (car kept)))
+            (should (string-match-p "\\`Move 1 message of ada@example.com from \\[Gmail\\]/All Mail to Receipts:\n  5  "
+                                    (funcall (lispm-tool-preview (lispm-get-tool "mail_move"))
+                                             [5] "[Gmail]/All Mail" "Receipts" nil)))
+            (should (equal (lispm-store-test--call-async "mail_move" [5] "[Gmail]/All Mail" "Receipts" nil)
+                           "Moved 1 message from [Gmail]/All Mail to Receipts."))
+            (should (equal (assq 'move asked) '(move :mailbox "[Gmail]/All Mail" :uids (5) :to "Receipts")))
+            (should (equal (lispm-store-test--call-async "mail_delete" [4] "INBOX" nil)
+                           "Deleted 1 message from INBOX, to [Gmail]/Trash."))
+            (should (equal (assq 'move asked) '(move :mailbox "INBOX" :uids (4) :to "[Gmail]/Trash")))
+            ;; Wrong calls are refused before anything is asked.
+            (should-error (lispm-store-test--call-async "mail_move" [5] "INBOX" "Nowhere" nil))
+            (should-error (lispm-store-test--call-async "mail_draft" "Hello" nil nil nil nil nil nil nil))
+            (should-error (lispm-store-test--call-async "mail_search" "  " nil nil nil)))
+        (when lispm-mail--save-timer (cancel-timer lispm-mail--save-timer))
+        (delete-directory home t)))))
+
 (provide 'lispm-store-test)
 ;;; lispm-store-test.el ends here
