@@ -136,9 +136,9 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-mail :url "https://github.com/LispMachineLab/lispm-mail"
-                        :rev "297fa5609bbf46b394ee873926ca197a407d4cf7"
+                        :rev "2500a60e1123d345228f206554df590b9bf7effd"
                         :assets (("lispm-mail-secrets.eld"
-                                  :url "https://github.com/LispMachineLab/lispm-mail/releases/download/v0.2.3/lispm-mail-secrets.eld"
+                                  :url "https://github.com/LispMachineLab/lispm-mail/releases/download/v0.3.0/lispm-mail-secrets.eld"
                                   :sha256 "37c49f23acebbdbbdea68159bf42ec62712b58b04fd311258612a95e90331b4f")))
    :command lispm-mail
    :requires (lispm-kit))
@@ -642,6 +642,13 @@
    :description "Lets agents list and read your notes in Stickies, stick a new one on the desktop and change a note's text or colour, each once you approve it."
    :file "skills/sticky-notes.org"
    :requires (stickies))
+
+  (use-mail
+   :kind skill
+   :name "Use Mail"
+   :description "Lets agents search your mail on its servers, Gmail with Gmail's own search, read it and list your mailboxes; a draft they write, and moving or deleting mail, waits for your approval each time; sending stays yours."
+   :file "skills/use-mail.org"
+   :requires (mail))
 
   (blocks-world
    :kind skill
