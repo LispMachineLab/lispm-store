@@ -171,7 +171,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-remote :url "https://github.com/LispMachineLab/lispm-remote"
-                          :rev "cbc90408cddaeb5856f2a15d5c3867601229b36e"
+                          :rev "773eef30ff297b8826c792e05cd5c7aef4cc507c"
                           :lisp-dir "lisp")
    :command lispm-remote
    :requires (lispm-prebuilt))
