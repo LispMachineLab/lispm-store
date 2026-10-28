@@ -571,8 +571,23 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-kit :url "https://github.com/LispMachineLab/lispm-kit"
-                       :rev "5bf1944bc28e23d5d142d0e70846d5ebe3deed30")
+                       :rev "a6cbb26aa2de9429981c9dda680f64c2664e6542")
    :feature lispm-kit)
+
+  (lispm-ui
+   :kind extension
+   :name "LispM UI"
+   :subtitle "What apps are drawn with"
+   :description "What LispM's applications are drawn with, in any Emacs: forms written as data, and the ways they ask you something, an alert, a choice or a file, drawn in the desktop's classic look, or asked in Emacs's own fields and minibuffer where there is no desktop."
+   :icon "lispm-ui"
+   :banner "lispm-ui"
+   :about "lispm-ui"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
+   :requires (lispm-kit)
+   :package (lispm-ui :url "https://github.com/LispMachineLab/lispm-ui"
+                      :rev "9981daa013b0f675ef2694b40b0565bcf8e0fd89")
+   :feature lispm-ui)
 
   (lispm-prebuilt
    :kind extension
