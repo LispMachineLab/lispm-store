@@ -136,9 +136,9 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-mail :url "https://github.com/LispMachineLab/lispm-mail"
-                        :rev "14e8cb3d5a9212d4363fa487b9e35dd5242295c4"
+                        :rev "3936be910eadfc1fbf98b91a8ba1daaba04faa7d"
                         :assets (("lispm-mail-secrets.eld"
-                                  :url "https://github.com/LispMachineLab/lispm-mail/releases/download/v0.4.0/lispm-mail-secrets.eld"
+                                  :url "https://github.com/LispMachineLab/lispm-mail/releases/download/v0.5.0/lispm-mail-secrets.eld"
                                   :sha256 "37c49f23acebbdbbdea68159bf42ec62712b58b04fd311258612a95e90331b4f")))
    :command lispm-mail
    :requires (lispm-kit lispm-ui))
