@@ -1045,7 +1045,8 @@ what changes mail asks the user every time."
                                     (lispm-store-test--call-async "mail_draft" "Thursday works." nil nil nil nil
                                                                   5 "[Gmail]/All Mail" nil)))
             (should (string-match-p "^To: Grace Hopper <grace@navy.mil>$" (car kept)))
-            (should (string-match-p "^In-Reply-To: <1@navy.mil>$" (car kept)))
+            ;; Emacs 30's message mode adds a comment after it.
+            (should (string-match-p "^In-Reply-To: <1@navy.mil>" (car kept)))
             (should (string-search "Thursday works." (car kept)))
             (should (string-search "> Shall we?" (car kept)))
             (should (equal (plist-get (cdr (assq 'append asked)) :mailbox) "[Gmail]/Drafts"))
