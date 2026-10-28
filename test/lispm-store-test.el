@@ -187,11 +187,18 @@ from git first, as the App Store's installer does it
 
 (defun lispm-store-test--desktop ()
   "Return the directories LispM Desktop loads from, which must be on the
-load path: its lisp/, and lispm-agent's, whose editor's agents it draws."
-  (list (file-name-directory (or (locate-library "lispm-desktop-ai")
-                                 (error "LispM Desktop's lisp/ is not on the load path")))
-        (file-name-directory (or (locate-library "lispm-agents")
-                                 (error "lispm-agent's lisp/ is not on the load path")))))
+load path: its lisp/, lispm-agent's, whose editor's agents it draws,
+LispM Kit's, in whose words both speak, and LispM UI's, with which they
+draw, where it is."
+  (append
+   (list (file-name-directory (or (locate-library "lispm-desktop-ai")
+                                  (error "LispM Desktop's lisp/ is not on the load path")))
+         (file-name-directory (or (locate-library "lispm-agents")
+                                  (error "lispm-agent's lisp/ is not on the load path")))
+         (file-name-directory (or (locate-library "lispm-kit-i18n")
+                                  (error "LispM Kit is not on the load path"))))
+   (when-let* ((ui (locate-library "lispm-ui-form")))
+     (list (file-name-directory ui)))))
 
 (ert-deftest lispm-store-test-apps-open ()
   "Each app's command is a command once its package is installed, and an
