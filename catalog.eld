@@ -136,12 +136,12 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-mail :url "https://github.com/LispMachineLab/lispm-mail"
-                        :rev "2500a60e1123d345228f206554df590b9bf7effd"
+                        :rev "14e8cb3d5a9212d4363fa487b9e35dd5242295c4"
                         :assets (("lispm-mail-secrets.eld"
-                                  :url "https://github.com/LispMachineLab/lispm-mail/releases/download/v0.3.0/lispm-mail-secrets.eld"
+                                  :url "https://github.com/LispMachineLab/lispm-mail/releases/download/v0.4.0/lispm-mail-secrets.eld"
                                   :sha256 "37c49f23acebbdbbdea68159bf42ec62712b58b04fd311258612a95e90331b4f")))
    :command lispm-mail
-   :requires (lispm-kit))
+   :requires (lispm-kit lispm-ui))
 
   (security
    :kind app
@@ -589,7 +589,7 @@
    :license "AGPL-3.0-or-later"
    :requires (lispm-kit)
    :package (lispm-ui :url "https://github.com/LispMachineLab/lispm-ui"
-                      :rev "04993e02461c4a5f59040f65df87aeefc62a5f97")
+                      :rev "157cc1853300ce6f3a7bde7086b22b7ee9a0bfb0")
    :feature lispm-ui)
 
   (lispm-prebuilt
