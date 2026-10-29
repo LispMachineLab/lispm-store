@@ -105,8 +105,9 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-stickies :url "https://github.com/LispMachineLab/lispm-stickies"
-                            :rev "01d6cbd324194bf7dd4b54e7b423f595ae47e9e3")
-   :feature lispm-stickies)
+                            :rev "15f6496f0ab322d0152f4da4acdef2870c8271e4")
+   :feature lispm-stickies
+   :requires (lispm-kit lispm-ui))
 
   (comfyui
    :kind app
@@ -275,11 +276,12 @@
    :about "doom"
    :author "LispMachineLab, dsda-doom and Freedoom"
    :license "AGPL-3.0-or-later AND GPL-2.0-or-later AND BSD-3-Clause"
-   ;; Release 0.1.0.
+   ;; Release 0.2.0.
    :package (lispm-doom :url "https://github.com/LispMachineLab/lispm-doom"
-                        :rev "e64443c3878b7f59edae466346db983942cb0626"
+                        :rev "abff7d3584f45f78548480a1a07f0b6b9d70e44a"
                         :lisp-dir "lisp")
    :command lispm-doom
+   :requires (lispm-prebuilt)
    ;; It runs in Emacs 32, LispM's experimental install.
    :emacs 32
    :needs ((library "SDL2_mixer" :for "the game's sound and music" :brew "sdl2_mixer"
@@ -529,7 +531,7 @@
    :needs ((program "holon" :for "running Holon's agents" :brew "holon-run/tap/holon"
                     :commands (lispm-holon-new lispm-holon-setup)))
    :package (lispm-holon :url "https://github.com/LispMachineLab/lispm-holon"
-                         :rev "db0c095922e27d21022cb8e6682df38737b28cf1")
+                         :rev "4c591030f27f773197631857453dbbdbc8ee132b")
    :feature lispm-holon)
 
   (openclaw
@@ -546,7 +548,7 @@
    :program "openclaw"
    :install "curl -fsSL https://openclaw.ai/install.sh | bash"
    :package (lispm-openclaw :url "https://github.com/LispMachineLab/lispm-openclaw"
-                            :rev "e3fa8600c9b87155bac885cabb2fc5e6a5c99576")
+                            :rev "390172eb8160f766878448ca105806f9dd6152ea")
    :feature lispm-openclaw)
 
   (emacs-cl
@@ -589,7 +591,7 @@
    :license "AGPL-3.0-or-later"
    :requires (lispm-kit)
    :package (lispm-ui :url "https://github.com/LispMachineLab/lispm-ui"
-                      :rev "4ceca5067f08933feacd304b8eb732bee32cb848")
+                      :rev "4de10067f8c87f0f5a77d705302dd4d25b591a0a")
    :feature lispm-ui)
 
   (lispm-prebuilt
