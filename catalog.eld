@@ -551,6 +551,21 @@
                             :rev "390172eb8160f766878448ca105806f9dd6152ea")
    :feature lispm-openclaw)
 
+  (office
+   :kind extension
+   :name "LispM Office"
+   :subtitle "Your agents at work"
+   :description "A pixel office inside LispM Agent's Work view: the agents in a project at their desks, taking a break or asking for help, with their current work and conversations opened in the same view."
+   :icon "office"
+   :banner "office"
+   :about "office"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
+   :package (lispm-office :url "https://github.com/LispMachineLab/lispm-office"
+                          :rev "091fc9ee3bba7caaa8ed3f771256d080b3566a27")
+   :feature lispm-office-extension
+   :requires (lispm-kit lispm-ui))
+
   (emacs-cl
    :kind extension
    :name "Common Lisp"
@@ -591,7 +606,7 @@
    :license "AGPL-3.0-or-later"
    :requires (lispm-kit)
    :package (lispm-ui :url "https://github.com/LispMachineLab/lispm-ui"
-                      :rev "4de10067f8c87f0f5a77d705302dd4d25b591a0a")
+                      :rev "62c2a38084fdf75988206027328e7e725ff57b44")
    :feature lispm-ui)
 
   (lispm-prebuilt

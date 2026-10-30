@@ -131,6 +131,10 @@ An extension adds to LispM Desktop's editor instead of opening a window, as Herm
 beside Claude Code and Codex.  The App Store lists one bringing an agent into the editor under AI
 Harness, and the others under Extensions.
 
+LispM Office is an extension of LispM Agent's Work view.  The LispM distribution installs it
+by default through the Store; it can be uninstalled here and installed again with Get.  Its
+entry library enables the renderer when loaded and removes its views and hooks when unloaded.
+
 | ~:subtitle~ | as an app's                                                                  |
 | ~:category~ | ~ai-harness~ for an agent in the editor; absent for the others               |
 | ~:icon~     | as an app's                                                                  |
