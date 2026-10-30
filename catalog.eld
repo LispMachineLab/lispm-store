@@ -562,7 +562,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-office :url "https://github.com/LispMachineLab/lispm-office"
-                          :rev "091fc9ee3bba7caaa8ed3f771256d080b3566a27")
+                          :rev "962e25b099f7bc7204d012de20af50fbed6f2f8a")
    :feature lispm-office-extension
    :requires (lispm-kit lispm-ui))
 
@@ -606,7 +606,7 @@
    :license "AGPL-3.0-or-later"
    :requires (lispm-kit)
    :package (lispm-ui :url "https://github.com/LispMachineLab/lispm-ui"
-                      :rev "62c2a38084fdf75988206027328e7e725ff57b44")
+                      :rev "14d41864a95235956082bf50783b77e345110bb4")
    :feature lispm-ui)
 
   (lispm-prebuilt
