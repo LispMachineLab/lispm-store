@@ -514,7 +514,7 @@
    :program "hermes"
    :install "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
    :package (lispm-hermes :url "https://github.com/LispMachineLab/lispm-hermes"
-                          :rev "7e07b87c10e305600e8b84c5f280d215e2496fac")
+                          :rev "c8c8d7c070b7eedcd5e970503406dc7ac752f692")
    :feature lispm-hermes)
 
   (holon
