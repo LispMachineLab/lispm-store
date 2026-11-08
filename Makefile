@@ -12,6 +12,9 @@ LISPM_KIT ?= ../lispm-kit
 # checkout beside this one by default, where there is one.
 LISPM_UI ?= ../lispm-ui
 UI = $(if $(wildcard $(LISPM_UI)/lispm-ui.el),-L $(LISPM_UI))
+LISPM_AUTH ?= ../lispm-auth
+LISPM_KERNEL ?= ../lispm-kernel/lisp
+AGENT_DEPS = $(foreach dir,$(wildcard $(LISPM_AUTH) $(LISPM_KERNEL)),-L $(dir))
 
 .PHONY: check test
 
@@ -26,5 +29,5 @@ check:
 # beside it, the roles' tools and the skills at work.  Needs the network
 # and git.
 test:
-	$(EMACS) -Q --batch $(UI) -L $(LISPM_KIT) -L $(LISPM_AGENT) -L $(LISPM_DESKTOP) -l test/lispm-store-test.el \
+	$(EMACS) -Q --batch $(UI) $(AGENT_DEPS) -L $(LISPM_KIT) -L $(LISPM_AGENT) -L $(LISPM_DESKTOP) -l test/lispm-store-test.el \
 	  -f ert-run-tests-batch-and-exit
