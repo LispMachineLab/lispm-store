@@ -551,6 +551,23 @@
                             :rev "390172eb8160f766878448ca105806f9dd6152ea")
    :feature lispm-openclaw)
 
+  (antigravity
+   :kind extension
+   :name "Antigravity"
+   :subtitle "Google's coding agent"
+   :category ai-harness
+   :description "Antigravity, Google's coding agent, in the editor beside Claude Code and Codex: started in a terminal at the project, its sessions and subagents listed and resumed, and Emacs's state shown to it."
+   :icon "antigravity"
+   :banner "antigravity"
+   :about "antigravity"
+   :author "LispMachineLab"
+   :license "AGPL-3.0-or-later"
+   :program "agy"
+   :install "agy install"
+   :package (lispm-antigravity :url "https://github.com/LispMachineLab/lispm-antigravity"
+                               :rev "cd7ab290bb10460e4c5f0bd3a81086b62af69653")
+   :feature lispm-antigravity)
+
   (office
    :kind extension
    :name "LispM Office"
