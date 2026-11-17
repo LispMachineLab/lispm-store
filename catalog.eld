@@ -206,9 +206,9 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-rotom :url "https://github.com/LispMachineLab/lispm-rotom"
-                         :rev "4ff572f7900af3fb4db4f0d0dffdae218eedd3e5")
+                         :rev "93b54fa12c8c586a090144a6f05c17f057ce5ccb")
    :command lispm-rotom
-   :requires (lispm-kit)
+   :requires (lispm-kit lispm-ui)
    :needs ((program "rotom" :for "reaching the models of your accounts" :cargo "rotom")))
 
   ;; To chat with.
