@@ -105,9 +105,9 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-stickies :url "https://github.com/LispMachineLab/lispm-stickies"
-                            :rev "15f6496f0ab322d0152f4da4acdef2870c8271e4")
+                            :rev "dc6ff0cdf7e8d6cd5bea6919e9dc2e97161b23d8")
    :feature lispm-stickies
-   :requires (lispm-kit lispm-ui))
+   :requires (lispm-ui))
 
   (comfyui
    :kind app
@@ -121,9 +121,9 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-comfyui :url "https://github.com/LispMachineLab/lispm-comfyui"
-                           :rev "235cd2557fdb7b1654b77435046218d1f698c0f4")
+                           :rev "75ad240d273537c9a801052bcacf6f81ea68a841")
    :command lispm-comfyui
-   :requires (lispm-kit lispm-ui))
+   :requires (lispm-ui))
 
   (mail
    :kind app
@@ -137,12 +137,12 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-mail :url "https://github.com/LispMachineLab/lispm-mail"
-                        :rev "3936be910eadfc1fbf98b91a8ba1daaba04faa7d"
+                        :rev "dbef17aefc47cecc948a56dd604268b31385d8ab"
                         :assets (("lispm-mail-secrets.eld"
                                   :url "https://github.com/LispMachineLab/lispm-mail/releases/download/v0.5.0/lispm-mail-secrets.eld"
                                   :sha256 "37c49f23acebbdbbdea68159bf42ec62712b58b04fd311258612a95e90331b4f")))
    :command lispm-mail
-   :requires (lispm-kit lispm-ui))
+   :requires (lispm-ui))
 
   (security
    :kind app
@@ -156,9 +156,9 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-security :url "https://github.com/LispMachineLab/lispm-security"
-                            :rev "e73576ac7edbea79b2390633c35d2121ee24067a")
+                            :rev "d465a0dc81aa43bfb946a76b14bac71d6a0b905b")
    :command lispm-security
-   :requires (lispm-kit))
+   :requires (lispm-ui))
 
   (remote
    :kind app
@@ -172,10 +172,10 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-remote :url "https://github.com/LispMachineLab/lispm-remote"
-                          :rev "f61283073a7564468ec7fd0c63588d57b3ac270e"
+                          :rev "227da91948f76bcc0ddc27f7659e8305c466a542"
                           :lisp-dir "lisp")
    :command lispm-remote
-   :requires (lispm-prebuilt))
+   :requires (lispm-ui))
 
   (1password
    :kind app
@@ -189,9 +189,9 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-1password :url "https://github.com/LispMachineLab/lispm-1password"
-                             :rev "1bd2d027a95479aa87ca15de6663a073ec3ac6b2")
+                             :rev "130f4bf4d08a1b9a80ef0f66fa99d32fc557317b")
    :command lispm-1password
-   :requires (lispm-kit)
+   :requires (lispm-ui)
    :needs ((program "op" :for "reading your vaults" :cask "1password-cli")))
 
   (rotom
@@ -206,9 +206,9 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-rotom :url "https://github.com/LispMachineLab/lispm-rotom"
-                         :rev "93b54fa12c8c586a090144a6f05c17f057ce5ccb")
+                         :rev "bb9691cfce527726aefc43ba6112d13ab3a04328")
    :command lispm-rotom
-   :requires (lispm-kit lispm-ui)
+   :requires (lispm-ui)
    :needs ((program "rotom" :for "reaching the models of your accounts" :cargo "rotom")))
 
   ;; To chat with.
@@ -276,12 +276,12 @@
    :about "doom"
    :author "LispMachineLab, dsda-doom and Freedoom"
    :license "AGPL-3.0-or-later AND GPL-2.0-or-later AND BSD-3-Clause"
-   ;; Release 0.2.0.
+   ;; Release 0.2.1.
    :package (lispm-doom :url "https://github.com/LispMachineLab/lispm-doom"
-                        :rev "abff7d3584f45f78548480a1a07f0b6b9d70e44a"
+                        :rev "986db372704e0a52854f85f603196e9c5be17b94"
                         :lisp-dir "lisp")
    :command lispm-doom
-   :requires (lispm-prebuilt)
+   :requires (lispm-ui)
    ;; It runs in Emacs 32, LispM's experimental install.
    :emacs 32
    :needs ((library "SDL2_mixer" :for "the game's sound and music" :brew "sdl2_mixer"
@@ -477,9 +477,9 @@
    :author "LispMachineLab, after Peter Norvig"
    :license "AGPL-3.0-or-later AND MIT"
    :package (lispm-mycin :url "https://github.com/LispMachineLab/lispm-mycin"
-                         :rev "44714bba908ec41dafb9996c76fb0e5bc57badfe")
+                         :rev "2964fa9bb5df2d577e121345145810856edc4cc7")
    :command lispm-mycin
-   :requires (emacs-cl lispm-kit))
+   :requires (emacs-cl lispm-ui))
 
   (shrdlu
    :kind app
@@ -493,9 +493,9 @@
    :author "LispMachineLab, after Terry Winograd"
    :license "AGPL-3.0-or-later"
    :package (lispm-shrdlu :url "https://github.com/LispMachineLab/lispm-shrdlu"
-                          :rev "78f92887e4706a666896631ff6a14adc70a4cc28")
+                          :rev "31373415a34758d33d28dff81da0ec68b2cbbb63")
    :command lispm-shrdlu
-   :requires (emacs-cl lispm-kit)
+   :requires (emacs-cl lispm-ui)
    :needs ((program "git" :for "fetching SHRDLU's Common Lisp on its first start" :xcode t)))
 
   ;; Extensions: agents for the editor, in AI Harness, then the others.
@@ -514,7 +514,7 @@
    :program "hermes"
    :install "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
    :package (lispm-hermes :url "https://github.com/LispMachineLab/lispm-hermes"
-                          :rev "c8c8d7c070b7eedcd5e970503406dc7ac752f692")
+                          :rev "ef2186530703f07d57fc17f94f8e38ed15bec4ab")
    :feature lispm-hermes)
 
   (holon
@@ -531,7 +531,7 @@
    :needs ((program "holon" :for "running Holon's agents" :brew "holon-run/tap/holon"
                     :commands (lispm-holon-new lispm-holon-setup)))
    :package (lispm-holon :url "https://github.com/LispMachineLab/lispm-holon"
-                         :rev "4c591030f27f773197631857453dbbdbc8ee132b")
+                         :rev "0b4e1214b9f25a8c8c16b25d13901df4eefcf657")
    :feature lispm-holon)
 
   (openclaw
@@ -548,7 +548,7 @@
    :program "openclaw"
    :install "curl -fsSL https://openclaw.ai/install.sh | bash"
    :package (lispm-openclaw :url "https://github.com/LispMachineLab/lispm-openclaw"
-                            :rev "390172eb8160f766878448ca105806f9dd6152ea")
+                            :rev "b14acb2936a794892eb5bd2cf491e7a1a8c9e879")
    :feature lispm-openclaw)
 
   (antigravity
@@ -565,7 +565,7 @@
    :program "agy"
    :install "agy install"
    :package (lispm-antigravity :url "https://github.com/LispMachineLab/lispm-antigravity"
-                               :rev "cd7ab290bb10460e4c5f0bd3a81086b62af69653")
+                               :rev "9a02a968405083a5c07bd7f1916f9b0c3be994a8")
    :feature lispm-antigravity)
 
   (office
@@ -579,9 +579,9 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-office :url "https://github.com/LispMachineLab/lispm-office"
-                          :rev "a7b02eb4b5bd3b4b9d442e44ce8800a43f7371bb")
+                          :rev "a811cd3510c69162aa1487ebfc2c434ed488622a")
    :feature lispm-office-extension
-   :requires (lispm-kit lispm-ui))
+   :requires (lispm-ui))
 
   (emacs-cl
    :kind extension
@@ -597,20 +597,6 @@
                       :rev "62007715826889b7daaedfd27cbaa9aa864842f1")
    :feature emacs-cl)
 
-  (lispm-kit
-   :kind extension
-   :name "LispM Kit"
-   :subtitle "What apps are made with"
-   :description "What the App Store's applications are made with, in any Emacs: each of an application's commands declared once, its key, its menu item and its button, so that Emacs's menus and the desktop's buttons and keys windows say the same."
-   :icon "lispm-kit"
-   :banner "lispm-kit"
-   :about "lispm-kit"
-   :author "LispMachineLab"
-   :license "AGPL-3.0-or-later"
-   :package (lispm-kit :url "https://github.com/LispMachineLab/lispm-kit"
-                       :rev "a6cbb26aa2de9429981c9dda680f64c2664e6542")
-   :feature lispm-kit)
-
   (lispm-ui
    :kind extension
    :name "LispM UI"
@@ -621,24 +607,9 @@
    :about "lispm-ui"
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
-   :requires (lispm-kit)
    :package (lispm-ui :url "https://github.com/LispMachineLab/lispm-ui"
-                      :rev "0018caafab0db3da1988373f5f2c947cf0225be2")
+                      :rev "5b934ab4f1b9f19af994a73c378e5e58d1a135e8")
    :feature lispm-ui)
-
-  (lispm-prebuilt
-   :kind extension
-   :name "LispM Prebuilt"
-   :subtitle "Native code, checked"
-   :description "The native code of LispM's packages, as LispM Remote's Rings node: the one built for this computer, downloaded in the background and kept only when its SHA-256 is the one the package pins, so that nobody has to build anything or wait for it."
-   :icon "lispm-prebuilt"
-   :banner "lispm-prebuilt"
-   :about "lispm-prebuilt"
-   :author "LispMachineLab"
-   :license "AGPL-3.0-or-later"
-   :package (lispm-prebuilt :url "https://github.com/LispMachineLab/lispm-prebuilt"
-                            :rev "6a42033b26579ba7648111166e24904f5277182e")
-   :feature lispm-prebuilt)
 
   ;; Agent roles, LispM Agent's: the App Store does not list them.
 
