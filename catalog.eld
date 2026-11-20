@@ -608,7 +608,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-ui :url "https://github.com/LispMachineLab/lispm-ui"
-                      :rev "5b934ab4f1b9f19af994a73c378e5e58d1a135e8")
+                      :rev "eb7fc36108be69332ee5b6b0fd1a792a4e6df057")
    :feature lispm-ui)
 
   ;; Agent roles, LispM Agent's: the App Store does not list them.
