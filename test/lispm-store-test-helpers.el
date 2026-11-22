@@ -45,6 +45,23 @@ outside it.  This also runs when setup or a test fails."
 (defvar lispm-store-test--ready nil
   "Non-nil once package archives and LispM Agent dependencies are initialized.")
 
+(defun lispm-store-test--archives-present-p ()
+  "Non-nil when every configured archive has downloaded its index."
+  (cl-every (lambda (archive)
+              (file-regular-p
+               (expand-file-name (format "archives/%s/archive-contents" (car archive))
+                                 package-user-dir)))
+            package-archives))
+
+(defun lispm-store-test--refresh-archives ()
+  "Refresh package archives, retrying transient mirror sync failures."
+  (let ((attempt 0))
+    (while (and (< attempt 4) (not (lispm-store-test--archives-present-p)))
+      (when (> attempt 0)
+        (sleep-for (* attempt 3)))
+      (cl-incf attempt)
+      (package-refresh-contents))))
+
 (defun lispm-store-test--setup ()
   "Initialize this run's package directory and Agent dependencies once.
 Loading this helper library alone does not install packages or use the network."
@@ -54,7 +71,7 @@ Loading this helper library alone does not install packages or use the network."
                              ("nongnu" . "https://elpa.nongnu.org/nongnu/")
                              ("melpa" . "https://melpa.org/packages/")))
     (package-initialize)
-    (package-refresh-contents)
+    (lispm-store-test--refresh-archives)
     (with-temp-buffer
       (insert-file-contents (or (locate-library "lispm.el" t)
                                 (error "lispm-agent's lisp/ is not on the load path")))
@@ -142,7 +159,14 @@ An error there signals an error here, including stdout and stderr."
                                               (package-installed-p (car requirement) (cadr requirement)))
                                             (package-desc-reqs (cadr (assq ',name package-alist))))))
                      (dolist (requirement unmet)
-                       (package-install (cadr (assq (car requirement) package-archive-contents))))
+                       (let ((req-name (car requirement)))
+                         (unless (assq req-name package-archive-contents)
+                           (package-refresh-contents))
+                         (let ((desc (cadr (assq req-name package-archive-contents))))
+                           (unless desc
+                             (error "Archive metadata unavailable for %s (required by %s)"
+                                    req-name ',name))
+                           (package-install desc))))
                      (and unmet t))))
            (lispm-store-test--emacs `(progn (package-vc-rebuild (cadr (assq ',name package-alist))) t))))))
     ;; Activate here what was installed there.
