@@ -158,6 +158,15 @@ ALL includes; and :text, as ERC shows it, without its timestamp."
             "")
           (plist-get message :text)))
 
+(defun lispm-irc--named-p (nick text)
+  "Whether TEXT names NICK as a whole IRC nickname, using ERC's case mapping."
+  (let ((case-fold-search nil)
+        (boundary (rx (not (any alnum "-[]\\`_^{|}")))))
+    (string-match-p (concat "\\(?:\\`\\|" boundary "\\)"
+                            (regexp-quote (erc-downcase nick))
+                            "\\(?:\\'\\|" boundary "\\)")
+                    (erc-downcase text))))
+
 (defun lispm-irc--unread (buffer)
   "How many messages came in BUFFER while the user was not looking, as
 ERC's track module counts them, and whether someone named the user in
@@ -175,8 +184,8 @@ from the faces the module keeps, which they choose differently."
                                       (let ((speaker (plist-get message :speaker)))
                                         (and speaker
                                              (not (with-current-buffer buffer (erc-current-nick-p speaker)))
-                                             (string-match-p (concat "\\b" (regexp-quote nick) "\\b")
-                                                             (plist-get message :text)))))
+                                             (with-current-buffer buffer
+                                               (lispm-irc--named-p nick (plist-get message :text))))))
                                     (last (lispm-irc-messages buffer t) count)))))
                t))))
 
@@ -215,27 +224,57 @@ from the faces the module keeps, which they choose differently."
                              (mapconcat #'lispm-irc--network live ", ")))
           (t (car live)))))
 
+(defun lispm-irc--send-target (conversation network)
+  "Resolve CONVERSATION and NETWORK without changing ERC state.
+Return (BUFFER SERVER TARGET); BUFFER is nil for a new private conversation."
+  (let* ((server (and network (lispm-irc--server-of network)))
+         (exact (get-buffer conversation))
+         (exact (and exact (with-current-buffer exact (derived-mode-p 'erc-mode)) exact))
+         (buffers
+          (if exact (list exact)
+            (erc-buffer-list
+             (lambda ()
+               (and (not (lispm-irc--server-p))
+                    (erc-default-target)
+                    (or (not server) (eq (erc-server-buffer) server))
+                    (string-equal (erc-downcase (erc-default-target))
+                                  (erc-downcase conversation)))))))
+         (buffer (car buffers)))
+    (when (cdr buffers)
+      (error "%s is on several networks: name it as one of %s" conversation
+             (mapconcat #'buffer-name buffers ", ")))
+    (when buffer
+      (when (lispm-irc--server-p buffer)
+        (error "%s is a network: name a channel or a person on it" conversation))
+      (when (and server (not (eq server (with-current-buffer buffer (erc-server-buffer)))))
+        (error "%s is not on network %s" conversation network))
+      (unless (with-current-buffer buffer (erc-default-target))
+        (error "The user is no longer in %s: rejoining is theirs to do" conversation))
+      (unless (erc-server-process-alive buffer)
+        (error "ERC is not connected to %s" (lispm-irc--network buffer))))
+    (setq server (or server (and buffer (with-current-buffer buffer (erc-server-buffer)))
+                     (lispm-irc--server-of nil)))
+    (let ((target (if buffer (with-current-buffer buffer (erc-default-target)) conversation)))
+      (when (and (not buffer) (with-current-buffer server (erc-channel-p target)))
+        (error "The user is not in %s on %s: joining is theirs to do"
+               target (lispm-irc--network server)))
+      (list buffer server target))))
+
+(defun lispm-irc--send-preview (conversation text network)
+  "Preview the same side-effect-free destination that sending resolves."
+  (pcase-let ((`(,_buffer ,server ,target) (lispm-irc--send-target conversation network)))
+    (format "To %s on %s:\n\n%s" target (lispm-irc--network server)
+            (string-join (lispm-irc--lines text) "\n"))))
+
 (defun lispm-irc--send-buffer (conversation network)
-  "The buffer messages to CONVERSATION go from; NETWORK as irc_send has it.
-A private conversation with a person is opened, unseen, if there is none.
-An error if the user is not in the channel, as joining is theirs to do."
-  (let ((buffer (condition-case nil (lispm-irc-buffer conversation) (error nil))))
-    (cond ((and buffer (lispm-irc--server-p buffer))
-           (error "%s is a network: name a channel or a person on it" conversation))
-          ((and buffer (not (with-current-buffer buffer (erc-default-target))))
-           (error "The user is no longer in %s: rejoining is theirs to do" conversation))
-          ((and buffer (not (erc-server-process-alive buffer)))
-           (error "ERC is not connected to %s" (lispm-irc--network buffer)))
-          (buffer buffer)
-          (t
-           (with-current-buffer (lispm-irc--server-of network)
-             (if (erc-channel-p conversation)
-                 (error "The user is not in %s on %s: joining is theirs to do"
-                        conversation (lispm-irc--network (current-buffer)))
-               (let ((erc-interactive-display 'bury))
-                 (erc-cmd-QUERY conversation))
-               (or (erc-get-buffer conversation erc-server-process)
-                   (error "ERC opened no conversation with %s" conversation))))))))
+  "Resolve the destination and, only now, open a missing private conversation."
+  (pcase-let ((`(,buffer ,server ,target) (lispm-irc--send-target conversation network)))
+    (or buffer
+        (with-current-buffer server
+          (let ((erc-interactive-display 'bury))
+            (erc-cmd-QUERY target))
+          (or (erc-get-buffer target erc-server-process)
+              (error "ERC opened no conversation with %s" target))))))
 
 (defun lispm-irc--lines (text)
   "TEXT as the lines irc_send sends, each short enough for IRC."
@@ -316,18 +355,12 @@ An error if the user is not in the channel, as joining is theirs to do."
 (lispm-deftool irc_send
     ((conversation string "The channel or person to send to: a conversation as irc_conversations names it, or a person's nick.")
      (text string "The message; each line is sent as a message of its own.")
-     (network string "The network, for a person no conversation is open with, where ERC is on more than one."
+     (network string "The network to send on; constrains existing conversations too, and is required for a new person when several networks are connected."
               :optional t))
   "Send a message to an IRC channel or person; the user approves each one first."
   :permission chat
   :always-ask t
-  :preview (lambda (conversation text network)
-             (let ((buffer (ignore-errors (lispm-irc-buffer conversation))))
-               (format "To %s on %s:\n\n%s" conversation
-                       (cond (buffer (lispm-irc--network buffer))
-                             (network network)
-                             (t (lispm-irc--network (lispm-irc--server-of nil))))
-                       (string-join (lispm-irc--lines text) "\n"))))
+  :preview #'lispm-irc--send-preview
   (let* ((lines (lispm-irc--lines text))
          (buffer (lispm-irc--send-buffer conversation network)))
     (with-current-buffer buffer

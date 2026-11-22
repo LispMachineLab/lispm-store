@@ -34,173 +34,21 @@
 ;;; Code:
 
 (require 'ert)
-(require 'package)
-(require 'package-vc)
-(require 'lispm-store-check (expand-file-name "lispm-store-check.el"
-                                              (file-name-directory (or load-file-name buffer-file-name))))
-
-(defvar lispm-store-test--work (make-temp-file "lispm-store-test" t)
-  "A directory of this run's own.")
-
-;; Packages go to a directory of this run's, LispM's own dependencies
-;; (its Package-Requires) first, but for those on the load path already,
-;; as LispM UI's checkout.
-(setq package-user-dir (expand-file-name "elpa" lispm-store-test--work)
-      package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
-                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-                         ("melpa" . "https://melpa.org/packages/")))
-(package-initialize)
-(package-refresh-contents)
-(with-temp-buffer
-  (insert-file-contents (or (locate-library "lispm.el" t) (error "lispm-agent's lisp/ is not on the load path")))
-  (pcase-dolist (`(,name . ,_version) (package-desc-reqs (package-buffer-info)))
-    (unless (or (eq name 'emacs) (package-installed-p name)
-                (locate-library (concat (symbol-name name) ".el") t))
-      (package-install name))))
-(require 'lispm)
-
-(defvar lispm-store-test--items nil
-  "The catalog's items, an alist (ID . PROPERTIES), once read.")
-
-(defun lispm-store-test--items ()
-  "The catalog's items; an error if `make check' would find problems."
-  (or lispm-store-test--items
-      (pcase-let ((`(,items . ,problems) (lispm-store-check-catalog)))
-        (when problems
-          (error "The catalog has problems; run make check:\n%s" (string-join problems "\n")))
-        (setq lispm-store-test--items items))))
-
-(defun lispm-store-test--of-kind (kind)
-  "The items of KIND."
-  (seq-filter (lambda (item) (eq (plist-get (cdr item) :kind) kind)) (lispm-store-test--items)))
-
-(defun lispm-store-test--emacs (form)
-  "What FORM evaluates to in a new Emacs that has this run's packages.
-An error there is one here, with what that Emacs said."
-  (let ((log (make-temp-file "lispm-store-emacs")))
-    (with-temp-buffer
-      (let ((status (call-process
-                     (expand-file-name invocation-name invocation-directory) nil (list t log) nil
-                     "-Q" "--batch" "--eval"
-                     (format "%S" `(progn (require 'package)
-                                          (require 'package-vc)
-                                          (setq package-user-dir ,package-user-dir
-                                                package-archives ',package-archives)
-                                          (package-initialize)
-                                          (princ (format "\nlispm-store-value: %S\n" ,form)))))))
-        (unless (and (eq status 0) (re-search-backward "^lispm-store-value: \\(.*\\)$" nil t))
-          (error "A new Emacs failed (%s) evaluating %S:\n%s" status form
-                 (with-temp-buffer (insert-file-contents log) (buffer-string))))
-        (car (read-from-string (match-string 1)))))))
-
-(defvar lispm-store-test--installed nil
-  "Non-nil once the apps' packages are installed.")
-
-(defun lispm-store-test--in-install-order (items)
-  "Return ITEMS, (ID . PROPERTIES) each, with the items one :requires
-before it, as the App Store installs them: an app's package may require
-an extension's, such as MYCIN's Emacs Common Lisp."
-  (let (order)
-    (cl-labels ((visit (item)
-                  (unless (memq item order)
-                    (dolist (required (plist-get (cdr item) :requires))
-                      (when-let* ((other (assq required items)))
-                        (visit other)))
-                    (push item order))))
-      (mapc #'visit items))
-    (nreverse order)))
-
-(defun lispm-store-test--install ()
-  "Install every app's and extension's package as LispM Desktop does, once.
-Each in an Emacs of its own, as installing loads what it compiles.
-A package from git may require a newer version of a package Emacs
-has built in, such as Compat: Emacs 30.1's package-vc leaves that
-unmet, as it compares no versions (fixed in 30.2).  Then the newer
-one is installed from the archives, and the package compiled again
-in a new Emacs, which loads it rather than the built-in one.
-A LispM library no archive holds, such as lispm-ui, is installed
-from git first, as the App Store's installer does it
-\(`lispm-desktop-store-installer--libraries')."
-  (unless lispm-store-test--installed
-    (pcase-dolist (`(,_id . ,item) (lispm-store-test--in-install-order
-                                    (append (lispm-store-test--of-kind 'app)
-                                            (lispm-store-test--of-kind 'extension))))
-      (pcase (plist-get item :package)
-        ('nil)
-        ((and (pred symbolp) name)
-         (lispm-store-test--emacs `(progn (package-install ',name) t)))
-        (`(,name . ,spec)
-         (when (lispm-store-test--emacs
-                `(progn
-                   (load ,(locate-library "lispm-desktop-store-installer") nil t)
-                   (advice-add 'package-vc-install-dependencies :around
-                               #'lispm-desktop-store-installer--libraries)
-                   (package-vc-install ',(cons name (cl-loop for (key value) on spec by #'cddr
-                                                             unless (eq key :rev) append (list key value)))
-                                       ,(plist-get spec :rev))
-                   (let ((unmet (seq-remove (lambda (requirement)
-                                              (package-installed-p (car requirement) (cadr requirement)))
-                                            (package-desc-reqs (cadr (assq ',name package-alist))))))
-                     (dolist (requirement unmet)
-                       (package-install (cadr (assq (car requirement) package-archive-contents))))
-                     (and unmet t))))
-           (lispm-store-test--emacs `(progn (package-vc-rebuild (cadr (assq ',name package-alist))) t))))))
-    ;; Activate here what was installed there.
-    (package-initialize)
-    (setq lispm-store-test--installed t)))
-
-(defun lispm-store-test--load-skill (file)
-  "Evaluate the code of the skill in FILE, as LispM does when an agent loads it."
-  (dolist (block (lispm-store-check--blocks (lispm-store-check--text file)))
-    (with-temp-buffer
-      (insert (nth 1 block))
-      (goto-char (point-min))
-      (while (progn (forward-comment (buffer-size)) (not (eobp)))
-        (eval (read (current-buffer)) t)))))
-
-(defun lispm-store-test--load-skills ()
-  "Install what the skills require and load them all, LispM's web skill too."
-  (lispm-store-test--install)
-  (lispm-store-test--load-skill (expand-file-name "../skills/web.org"
-                                                  (file-name-directory (locate-library "lispm"))))
-  (pcase-dolist (`(,_id . ,item) (lispm-store-test--of-kind 'skill))
-    (let ((file (plist-get item :file)))
-      (lispm-store-test--load-skill (if (string-suffix-p "/" file) (concat file "SKILL.org") file)))))
-
-(defun lispm-store-test--call (tool &rest args)
-  "Call the tool TOOL with ARGS; its result."
-  (apply (lispm-tool-function (lispm-get-tool tool)) args))
-
-(defun lispm-store-test--call-async (tool &rest args)
-  "Call the asynchronous tool TOOL with ARGS; its result, once it has one."
-  (let (result (deadline (+ (float-time) 60)))
-    (apply (lispm-tool-function (lispm-get-tool tool))
-           (lambda (value &optional failed) (setq result (list value failed)))
-           args)
-    (while (and (not result) (< (float-time) deadline))
-      (accept-process-output nil 0.2))
-    (should result)
-    (should-not (nth 1 result))
-    (car result)))
+(require 'lispm-store-test-helpers
+         (expand-file-name
+          "lispm-store-test-helpers.el"
+          (file-name-directory
+           (or load-file-name (bound-and-true-p byte-compile-current-file) buffer-file-name))))
 
 ;;;; Apps, extensions and roles
 
-(defun lispm-store-test--desktop ()
-  "Return the directories LispM Desktop loads from, which must be on the
-load path: its lisp/, lispm-agent's, whose editor's agents it draws,
-and LispM UI's, in whose words both speak and with which they draw."
-  (list (file-name-directory (or (locate-library "lispm-desktop-ai")
-                                 (error "LispM Desktop's lisp/ is not on the load path")))
-        (file-name-directory (or (locate-library "lispm-agents")
-                                 (error "lispm-agent's lisp/ is not on the load path")))
-        (file-name-directory (or (locate-library "lispm-ui")
-                                 (error "LispM UI is not on the load path")))))
-
-(ert-deftest lispm-store-test-apps-open ()
+(ert-deftest lispm-store-test-app-entrypoints-available ()
   "Each app's command is a command once its package is installed, and an
 app that makes itself loads beside LispM Desktop and provides its
-feature.  In a new Emacs, as after a restart: installing compiles a
-package, which loads more of it than its autoloads."
+feature.  This is an availability check, not a launch or GUI smoke
+test: it does not exercise commands, accounts or native capabilities.
+In a new Emacs, as after a restart: installing compiles a package,
+which loads more of it than its autoloads."
   (lispm-store-test--install)
   (pcase-dolist (`(,id . ,item) (lispm-store-test--of-kind 'app))
     (let ((command (plist-get item :command))
@@ -584,7 +432,7 @@ chooses LispM's model, against the stand-ins for rotom and curl its
 package tests with: no daemon is touched, no account signed in to."
   (lispm-store-test--load-skills)
   (let* ((fakes (expand-file-name "test/" (file-name-directory (locate-library "lispm-rotom"))))
-         (dir (make-temp-file "lispm-store-rotom" t))
+         (dir (make-temp-file (expand-file-name "rotom-" lispm-store-test--work) t))
          (process-environment (cons (concat "FAKE_ROTOM_DIR=" dir) process-environment))
          (lispm-rotom-program (expand-file-name "fake-rotom" fakes))
          (lispm-rotom-curl-program (expand-file-name "fake-curl" fakes))
@@ -970,7 +818,7 @@ them, against a fake telega-server."
 reads, keeps a reply in Drafts, moves and deletes, against a fake server;
 what changes mail asks the user every time."
   (lispm-store-test--load-skills)
-  (let* ((home (make-temp-file "lispm-store-test-mail" t))
+  (let* ((home (make-temp-file (expand-file-name "mail-" lispm-store-test--work) t))
          (lispm-mail-directory (expand-file-name "mail/" home))
          (lispm-mail-accounts (list (list :id "ada" :name "Ada Lovelace" :address "ada@example.com")))
          (lispm-mail-default-account nil)
@@ -979,7 +827,6 @@ what changes mail asks the user every time."
          (lispm-mail--mailboxes (make-hash-table :test #'equal))
          (lispm-mail--boxes (make-hash-table :test #'equal))
          (lispm-mail--workers (make-hash-table :test #'equal))
-         (lispm-use-mail--seen (make-hash-table :test #'equal))
          (lispm-mail--save-timer nil)
          (lispm-mail--unsaved nil)
          (headers (list (list :uid 5 :flags nil :date 1793095200 :from '("Grace Hopper" . "grace@navy.mil")
@@ -987,7 +834,14 @@ what changes mail asks the user every time."
                         (list :uid 4 :flags '("\\Seen") :date 1793008800 :from '(nil . "news@example.org")
                               :subject "Weekly")))
          asked kept)
-    (cl-letf (((symbol-function 'lispm-mail-request)
+    (cl-letf (((symbol-function 'lispm-mail-message)
+               (lambda (id mailbox uid)
+                 ;; The public data layer is authoritative, including the
+                 ;; mailbox's current UIDVALIDITY, not a skill-owned cache.
+                 (when (and (equal id "ada")
+                            (member mailbox '("INBOX" "[Gmail]/All Mail")))
+                   (seq-find (lambda (message) (equal (plist-get message :uid) uid)) headers))))
+              ((symbol-function 'lispm-mail-request)
                (lambda (_id operation properties callback)
                  (push (cons operation properties) asked)
                  (run-at-time

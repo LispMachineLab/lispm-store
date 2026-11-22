@@ -243,7 +243,10 @@ that the agent's index sees every tool a skill defines.
    they drive.  Offline; needs lispm-desktop's =lisp/=, beside this checkout or named by
    ~LISPM_DESKTOP~.  In LispM Desktop, =M-x lispm-desktop-store-check-catalog= says the same of any
    catalog.
-4. *Run ~make test~*: installs every package as LispM Desktop does and checks that apps' commands
+4. *Run ~make test-offline~*: exercises focused failure-path regressions with local dependency
+   stubs, including late callbacks, recipient selection and installer assets.  It installs no
+   packages and sends no messages.  Then *run ~make test~*: installs every package as LispM
+   Desktop does and checks that apps' commands
    exist and extensions load, that LispMachineLab's packages name nothing of LispM Desktop's
    outside their tests, that roles name real tools, that agents' search sees every tool of each
    skill, and runs the skills' tools.  Needs the
