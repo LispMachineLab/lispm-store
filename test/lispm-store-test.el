@@ -236,7 +236,8 @@ every tool it defines, defined where LispM Agent's index sees it."
          (elfeed-db-directory (expand-file-name "elfeed" lispm-store-test--work))
          (elfeed-feeds (list (concat "file://" feed))))
     (with-temp-file feed (insert lispm-store-test--feed))
-    (should (string-match-p "Fetched 1 feeds: 2 new entries" (lispm-store-test--call-async "feeds_update")))
+    (should (string-match-p "Update queue finished for 1 feeds: 2 new entries"
+                            (lispm-store-test--call-async "feeds_update")))
     (should (string-match-p "Test Planet\n.*(2 unread)" (lispm-store-test--call "feeds_list")))
     (let* ((found (lispm-store-test--call "feeds_search" "+unread" nil))
            (keys (let (keys (start 0))
