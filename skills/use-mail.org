@@ -40,6 +40,12 @@ These ask the user every time, whatever their policy says: they read the draft, 
 messages go where, before it is done.  There is no tool to send: write a draft and tell the user
 it is there.  Draft, move and delete only what the user asked for.
 
+Approval descriptions use Mail's current cache, never a separate cache of search results;
+unknown messages are shown by UID alone.  After a mailbox is rebuilt, list it again and
+reselect messages before approving a change.  A timeout prevents a reply's pending read from
+starting a new draft save, but cannot undo a save already submitted to the server: check Drafts
+before retrying an uncertain save.
+
 * Beyond the tools
 
 With ~eval_elisp~: ~(lispm-mail)~ opens Mail.  ~lispm-mail-accounts~ is the accounts, plists with
@@ -69,10 +75,6 @@ the server answers.
 
 (defvar lispm-use-mail-timeout 120
   "Seconds the tools wait for the mail servers before they give up.")
-
-(defvar lispm-use-mail--seen (make-hash-table :test #'equal)
-  "The messages the tools told of, by (ID MAILBOX UID): what the approval of
-a move or delete names them by.")
 
 (defconst lispm-use-mail-roles
   '((inbox . "Inbox") (drafts . "Drafts") (sent . "Sent") (archive . "Archive") (all . "All Mail")
@@ -119,18 +121,12 @@ far as its mailboxes are known."
       (error "%s has no mailbox %s; mail_mailboxes lists them" (plist-get account :address) name))
     name))
 
-(defun lispm-use-mail--remember (account mailbox messages)
-  "Note MESSAGES of MAILBOX of ACCOUNT, told of: return them."
-  (dolist (message messages)
-    (puthash (list (lispm-mail-account-id account) mailbox (plist-get message :uid))
-             message lispm-use-mail--seen))
-  messages)
-
 (defun lispm-use-mail--known (account mailbox uid)
-  "The message UID of MAILBOX of ACCOUNT as the tools or Mail know it, or nil."
-  (let ((id (lispm-mail-account-id account)))
-    (or (gethash (list id mailbox uid) lispm-use-mail--seen)
-        (lispm-mail-message id mailbox uid))))
+  "Return UID in MAILBOX of ACCOUNT from Mail's authoritative cache.
+Do not retain a second cache: Mail invalidates its own on UIDVALIDITY
+changes.  Server search results not in that cache are deliberately not
+used as approval identities."
+  (lispm-mail-message (lispm-mail-account-id account) mailbox uid))
 
 (defun lispm-use-mail--line (message)
   "MESSAGE, a plist as Mail's list knows it, in a line: UID, date, sender,
@@ -170,9 +166,9 @@ only when each failed."
            (error (funcall said nil (error-message-string err))))))
      accounts)))
 
-(defun lispm-use-mail--lines (account mailbox messages)
-  "MESSAGES of MAILBOX of ACCOUNT, a line each, noted as told of."
-  (mapconcat #'lispm-use-mail--line (lispm-use-mail--remember account mailbox messages) "\n"))
+(defun lispm-use-mail--lines (_account _mailbox messages)
+  "Format MESSAGES as one line each without caching their identities."
+  (mapconcat #'lispm-use-mail--line messages "\n"))
 
 (defun lispm-use-mail--uids (uids)
   "UIDS, a list or vector of numbers, as a list; an error when empty."
@@ -357,19 +353,21 @@ ACCOUNT, REPLY-TO, REPLY-MAILBOX and REPLY-ALL by."
   (let* ((account (lispm-use-mail--account account))
          (id (lispm-mail-account-id account))
          (blank (lambda (text) (or (null text) (string-blank-p text))))
+         (active t)
          (finish nil)
          (given (append (unless (funcall blank to) (list :to to))
                         (unless (funcall blank cc) (list :cc cc))
                         (when subject (list :subject subject))))
          (save (lambda (fields)
-                 (lispm-mail-save-draft
-                  fields
-                  (lambda (drafts error)
-                    (if error
-                        (funcall finish error t)
-                      (funcall finish (format "Kept in %s's %s, unsent: to %s, “%s”.  The user sends it from there in Mail."
-                                              (plist-get account :address) drafts
-                                              (plist-get fields :to) (plist-get fields :subject)))))))))
+                 (when active
+                   (lispm-mail-save-draft
+                    fields
+                    (lambda (drafts error)
+                      (if error
+                          (funcall finish error t)
+                        (funcall finish (format "Kept in %s's %s, unsent: to %s, “%s”.  The user sends it from there in Mail."
+                                                (plist-get account :address) drafts
+                                                (plist-get fields :to) (plist-get fields :subject))))))))))
     (when (funcall blank body)
       (error "The draft has no text"))
     (cond (reply-to
@@ -378,7 +376,10 @@ ACCOUNT, REPLY-TO, REPLY-MAILBOX and REPLY-ALL by."
            (lispm-use-mail--mailbox account reply-mailbox))
           ((funcall blank to)
            (error "Say whom the message goes to")))
-    (setq finish (lispm-use-mail--finish done))
+    (setq finish (lispm-use-mail--finish
+                  (lambda (value &optional failed)
+                    (setq active nil)
+                    (funcall done value failed))))
     (if reply-to
         (progn
           (lispm-mail-read-message

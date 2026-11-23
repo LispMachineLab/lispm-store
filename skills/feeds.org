@@ -229,20 +229,23 @@ in it if an entry was shown there."
       (funcall done "The user follows no feeds: elfeed-feeds is empty.")
     (let ((before (hash-table-count elfeed-db-entries))
           (deadline (+ (float-time) lispm-feeds-update-timeout))
-          timer)
-      (when (zerop (elfeed-queue-count-total))
-        (elfeed-update))
+          finished timer)
+      ;; Existing work may cover only one feed.  Request every configured feed
+      ;; rather than treating a nonempty queue as a complete update request.
+      (elfeed-update)
       (setq timer
             (run-at-time
              1 1
              (lambda ()
-               (when (or (zerop (elfeed-queue-count-total)) (> (float-time) deadline))
+               (when (and (not finished)
+                          (or (zerop (elfeed-queue-count-total)) (> (float-time) deadline)))
+                 (setq finished t)
                  (cancel-timer timer)
                  (elfeed-db-save)
                  (funcall done
                           (format "%s %d feeds: %d new entries%s."
                                   (if (zerop (elfeed-queue-count-total))
-                                      "Fetched"
+                                      "Update queue finished for"
                                     "Still fetching after the timeout; so far,")
                                   (length (elfeed-feed-list))
                                   (- (hash-table-count elfeed-db-entries) before)

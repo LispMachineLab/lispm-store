@@ -45,14 +45,17 @@
     (error "LispM Desktop's lisp/ is not on the load path: make check LISPM_DESKTOP=DIR")))
 
 (defconst lispm-store-check-root
-  (file-name-directory (directory-file-name (file-name-directory (or load-file-name buffer-file-name))))
+  (file-name-directory
+   (directory-file-name
+    (file-name-directory
+     (or load-file-name (bound-and-true-p byte-compile-current-file) buffer-file-name))))
   "The store's checkout.")
 
 (defconst lispm-store-check-keys
   '((role :required (:kind :name :description :file) :optional (:requires))
     (skill :required (:kind :name :description :file :requires) :optional ()))
-  "The properties of an item of each kind LispM Agent's, not the App
-Store's; those of an app or an extension are `lispm-desktop-catalog-properties'.")
+  "Allowed properties for role and skill items belonging to LispM Agent.
+App and extension properties live in `lispm-desktop-catalog-properties'.")
 
 (defconst lispm-store-check-forbidden '(:make :shell-command)
   "Properties no part of the catalog may hold: they would run commands.")
@@ -99,7 +102,7 @@ Store's; those of an app or an extension are `lispm-desktop-catalog-properties'.
            nil)))
 
 (defun lispm-store-check--plist-p (plist where)
-  "Non-nil if PLIST is a property list of keywords, each once; else report it at WHERE."
+  "Non-nil if PLIST has unique keyword keys; else report it at WHERE."
   (cond ((not (and (proper-list-p plist) (cl-evenp (length plist))))
          (lispm-store-check--problem "%s: not a property list" where)
          nil)
@@ -188,8 +191,8 @@ introduction's translations and images."
 ;;;; Roles and skills
 
 (defun lispm-store-check--keywords (text)
-  "The #+ keywords at the start of the org TEXT: an alist (KEY . VALUE), and the body.
-Returns (KEYWORDS . BODY)."
+  "Parse `#+KEY: VALUE' lines at the start of org TEXT.
+Returns `(KEYWORDS . BODY)'."
   (with-temp-buffer
     (insert text)
     (goto-char (point-min))
@@ -343,9 +346,13 @@ it drives, which the App Store installs it with" id other))))))))
                   (cond ((memq id path)
                          (lispm-store-check--problem "%s: its :requires go round in a circle" id))
                         ((not (memq id done))
-                         (dolist (other (plist-get (cdr (assq id items)) :requires))
-                           (when (and (symbolp other) (assq other items))
-                             (visit other (cons id path))))
+                         (let ((requires (plist-get (cdr (assq id items)) :requires)))
+                           ;; Malformed edges were reported above; do not walk
+                           ;; atoms, dotted lists or circular lists as lists.
+                           (when (proper-list-p requires)
+                             (dolist (other requires)
+                               (when (and (symbolp other) (assq other items))
+                                 (visit other (cons id path))))))
                          (push id done)))))
       (dolist (item items)
         (visit (car item) nil)))))

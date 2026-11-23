@@ -66,9 +66,14 @@ SHRDLU's window, where its App Store installed it."
                      (cond (problem (funcall done problem t))
                            ((string-empty-p text) (funcall done "SHRDLU said nothing."))
                            (t (funcall done (concat "SHRDLU: " text))))))))
-    (lispm-blocks-world-show (lispm-shrdlu-ask sentence answer))
-    (setq timer (run-at-time lispm-blocks-world-timeout nil answer nil
-                             "SHRDLU has not answered yet; its window shows how far it got."))))
+    ;; Arm before asking: the callback is allowed to run synchronously.
+    ;; Startup and display failures must also release this request's timer.
+    (condition-case err
+        (progn
+          (setq timer (run-at-time lispm-blocks-world-timeout nil answer nil
+                                   "SHRDLU has not answered yet; its window shows how far it got."))
+          (lispm-blocks-world-show (lispm-shrdlu-ask sentence answer)))
+      (error (funcall answer nil (error-message-string err))))))
 
 (lispm-deftool shrdlu_new ()
   "Start a new dialogue with SHRDLU, the blocks back where they began."
