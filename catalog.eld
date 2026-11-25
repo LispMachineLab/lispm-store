@@ -568,21 +568,6 @@
                                :rev "9a02a968405083a5c07bd7f1916f9b0c3be994a8")
    :feature lispm-antigravity)
 
-  (office
-   :kind extension
-   :name "LispM Office"
-   :subtitle "Your agents at work"
-   :description "A pixel office inside LispM Agent's Work view: the agents in a project at their desks, taking a break or asking for help, with their current work and conversations opened in the same view."
-   :icon "office"
-   :banner "office"
-   :about "office"
-   :author "LispMachineLab"
-   :license "AGPL-3.0-or-later"
-   :package (lispm-office :url "https://github.com/LispMachineLab/lispm-office"
-                          :rev "cbcd7076d9028c411f601e3b7a318289e5a24139")
-   :feature lispm-office-extension
-   :requires (lispm-ui))
-
   (emacs-cl
    :kind extension
    :name "Common Lisp"
@@ -608,7 +593,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-ui :url "https://github.com/LispMachineLab/lispm-ui"
-                      :rev "10055f93b1d88f8d832e446443a63dfbc4d6a146")
+                      :rev "36d54492417683692cf4c915bfe987fddffbe5e9")
    :feature lispm-ui)
 
   ;; Agent roles, LispM Agent's: the App Store does not list them.
