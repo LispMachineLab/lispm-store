@@ -209,12 +209,17 @@ An error there signals an error here, including stdout and stderr."
 
 (defun lispm-store-test--desktop ()
   "Return the directories LispM Desktop loads from on `load-path'."
-  (list (file-name-directory (or (locate-library "lispm-desktop-ai")
-                                 (error "LispM Desktop's lisp/ is not on the load path")))
-        (file-name-directory (or (locate-library "lispm-agents")
-                                 (error "lispm-agent's lisp/ is not on the load path")))
-        (file-name-directory (or (locate-library "lispm-ui")
-                                 (error "LispM UI is not on the load path")))))
+  (delq nil
+        (list (file-name-directory (or (locate-library "lispm-desktop-ai")
+                                       (error "LispM Desktop's lisp/ is not on the load path")))
+              (file-name-directory (or (locate-library "lispm-agents")
+                                       (error "lispm-agent's lisp/ is not on the load path")))
+              (file-name-directory (or (locate-library "lispm-ui")
+                                       (error "LispM UI is not on the load path")))
+              (when-let* ((auth (locate-library "lispm-auth")))
+                (file-name-directory auth))
+              (when-let* ((kernel (locate-library "lispm-kernel")))
+                (file-name-directory kernel)))))
 
 (provide 'lispm-store-test-helpers)
 ;;; lispm-store-test-helpers.el ends here
