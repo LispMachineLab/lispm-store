@@ -105,7 +105,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-stickies :url "https://github.com/LispMachineLab/lispm-stickies"
-                            :rev "dc6ff0cdf7e8d6cd5bea6919e9dc2e97161b23d8")
+                            :rev "7fa7ad4ba7939bf946778e8df565a80d94bef473")
    :feature lispm-stickies
    :requires (lispm-ui))
 
@@ -121,7 +121,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-comfyui :url "https://github.com/LispMachineLab/lispm-comfyui"
-                           :rev "dc63707fab3554d78814d1c79acf5bcf7335f8dd")
+                           :rev "ba5c492559f537d415b609faf898aa9af2874b7e")
    :command lispm-comfyui
    :requires (lispm-ui))
 
@@ -137,9 +137,9 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-mail :url "https://github.com/LispMachineLab/lispm-mail"
-                        :rev "dbef17aefc47cecc948a56dd604268b31385d8ab"
+                        :rev "6459fa74cae632982d344df8bb630c41d00e9ed9"
                         :assets (("lispm-mail-secrets.eld"
-                                  :url "https://github.com/LispMachineLab/lispm-mail/releases/download/v0.5.0/lispm-mail-secrets.eld"
+                                  :url "https://github.com/LispMachineLab/lispm-mail/releases/download/v0.5.1/lispm-mail-secrets.eld"
                                   :sha256 "37c49f23acebbdbbdea68159bf42ec62712b58b04fd311258612a95e90331b4f")))
    :command lispm-mail
    :requires (lispm-ui))
@@ -156,7 +156,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-security :url "https://github.com/LispMachineLab/lispm-security"
-                            :rev "d465a0dc81aa43bfb946a76b14bac71d6a0b905b")
+                            :rev "f8ae404fe3c51894b88a6f52cb8b2dcb8a3152ce")
    :command lispm-security
    :requires (lispm-ui))
 
@@ -172,7 +172,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-remote :url "https://github.com/LispMachineLab/lispm-remote"
-                          :rev "6910fb0b2d27d94c8a30ccff6d2ab398bdfb03f8"
+                          :rev "95a9a223b167bb88235c45a3be26a1355aedffb9"
                           :lisp-dir "lisp")
    :command lispm-remote
    :requires (lispm-ui))
@@ -189,7 +189,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-1password :url "https://github.com/LispMachineLab/lispm-1password"
-                             :rev "130f4bf4d08a1b9a80ef0f66fa99d32fc557317b")
+                             :rev "9e61ab923fa0327840be35a5606b05f46a9e99f2")
    :command lispm-1password
    :requires (lispm-ui)
    :needs ((program "op" :for "reading your vaults" :cask "1password-cli")))
@@ -206,7 +206,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-rotom :url "https://github.com/LispMachineLab/lispm-rotom"
-                         :rev "bb9691cfce527726aefc43ba6112d13ab3a04328")
+                         :rev "2615800bb9949f9b16aa97214397247a6b3309a8")
    :command lispm-rotom
    :requires (lispm-ui)
    :needs ((program "rotom" :for "reaching the models of your accounts" :cargo "rotom")))
@@ -493,7 +493,7 @@
    :author "LispMachineLab, after Terry Winograd"
    :license "AGPL-3.0-or-later"
    :package (lispm-shrdlu :url "https://github.com/LispMachineLab/lispm-shrdlu"
-                          :rev "31373415a34758d33d28dff81da0ec68b2cbbb63")
+                          :rev "66bca9bbb51b5633be781a73724e2b616705fb9b")
    :command lispm-shrdlu
    :requires (emacs-cl lispm-ui)
    :needs ((program "git" :for "fetching SHRDLU's Common Lisp on its first start" :xcode t)))
@@ -579,7 +579,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-office :url "https://github.com/LispMachineLab/lispm-office"
-                          :rev "a811cd3510c69162aa1487ebfc2c434ed488622a")
+                          :rev "cbcd7076d9028c411f601e3b7a318289e5a24139")
    :feature lispm-office-extension
    :requires (lispm-ui))
 
@@ -608,7 +608,7 @@
    :author "LispMachineLab"
    :license "AGPL-3.0-or-later"
    :package (lispm-ui :url "https://github.com/LispMachineLab/lispm-ui"
-                      :rev "eb7fc36108be69332ee5b6b0fd1a792a4e6df057")
+                      :rev "10055f93b1d88f8d832e446443a63dfbc4d6a146")
    :feature lispm-ui)
 
   ;; Agent roles, LispM Agent's: the App Store does not list them.
